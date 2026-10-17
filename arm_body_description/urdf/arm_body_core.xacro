@@ -1,0 +1,659 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Generated from Fusion design "Arm + Body v12". Units: metres, kilograms. -->
+  <material name="petg_orange"><color rgba="0.95 0.45 0.10 1"/></material>
+  <material name="servo_black"><color rgba="0.12 0.12 0.12 1"/></material>
+  <material name="aluminium"><color rgba="0.75 0.76 0.78 1"/></material>
+  <link name="world"/>
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 -0.2299" rpy="0 0 0"/>
+  </joint>
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.06982 -0.065942 0.465586" rpy="0 0 0"/>
+      <mass value="5.541254"/>
+      <inertia ixx="1.3250e-01" ixy="-1.3357e-04" ixz="1.6258e-03" iyy="1.2468e-01" iyz="3.4035e-05" izz="6.3112e-02"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.150129 0.629871" rpy="1.570796 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="aluminium"/>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.150129 0.629871" rpy="1.570796 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <link name="arm_a_servo_base">
+    <inertial>
+      <origin xyz="0.034003 0.066751 0.720114" rpy="0 0 0"/>
+      <mass value="0.089575"/>
+      <inertia ixx="1.6237e-05" ixy="-1.9098e-07" ixz="-3.1938e-07" iyy="3.0665e-05" iyz="-5.8501e-09" izz="2.6592e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.008149 0.113918 0.720321" rpy="0 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_servo_base.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.008149 0.113918 0.720321" rpy="0 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_servo_base.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_servo_base_fixed" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_a_servo_base"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_merge">
+    <inertial>
+      <origin xyz="0.027871 -0.000869 -0.017787" rpy="0 0 0"/>
+      <mass value="0.017918"/>
+      <inertia ixx="8.0952e-06" ixy="1.9232e-07" ixz="4.2786e-08" iyy="8.9403e-06" iyz="-2.3279e-09" izz="6.4557e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.04205 0.109249 -0.017324" rpy="1.4634 -1.570796 -1.4634"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.04205 0.109249 -0.017324" rpy="1.4634 -1.570796 -1.4634"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint1" type="revolute">
+    <parent link="arm_a_servo_base"/>
+    <child link="arm_a_merge"/>
+    <origin xyz="0.050498 0.066869 0.738721" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.5708" upper="1.5708" effort="4.9" velocity="7.85"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3250_2">
+    <inertial>
+      <origin xyz="0.054394 0.00057 -0.01793" rpy="0 0 0"/>
+      <mass value="0.074500"/>
+      <inertia ixx="1.0445e-05" ixy="-1.3398e-07" ixz="-2.4388e-12" iyy="1.6305e-05" iyz="1.5442e-11" izz="1.9439e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.04315 0.1098 -0.01793" rpy="-1.570796 0 1.570796"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3250_2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.04315 0.1098 -0.01793" rpy="-1.570796 0 1.570796"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3250_2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3250_2_fixed" type="fixed">
+    <parent link="arm_a_merge"/>
+    <child link="arm_a_sts3250_2"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_merge2_1">
+    <inertial>
+      <origin xyz="0.00017 -0.018657 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="2.2923e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="-2.7892e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.11135 0.116301 0.000551" rpy="-1.56878 -1.570796 -1.572813"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_1.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.11135 0.116301 0.000551" rpy="-1.56878 -1.570796 -1.572813"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_1.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint2" type="revolute">
+    <parent link="arm_a_sts3250_2"/>
+    <child link="arm_a_merge2_1"/>
+    <origin xyz="0.0672 0.01905 -0.01793" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.1416" upper="0.0000" effort="4.9" velocity="7.85"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3215_4">
+    <inertial>
+      <origin xyz="0 -0.017579 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4353e-05" ixy="-4.5297e-09" ixz="1.3538e-11" iyy="1.2037e-05" iyz="9.5296e-08" izz="7.7063e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.111251 0.10325 -0.1287" rpy="-1.572735 1.570796 1.568857"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_4.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.111251 0.10325 -0.1287" rpy="-1.572735 1.570796 1.568857"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_4.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3215_4_fixed" type="fixed">
+    <parent link="arm_a_merge2_1"/>
+    <child link="arm_a_sts3215_4"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_merge2_2">
+    <inertial>
+      <origin xyz="0.00017 -0.018657 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="2.2923e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="-2.7892e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.112251 0.1154 0.000551" rpy="-1.571184 -1.570796 -1.570409"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.112251 0.1154 0.000551" rpy="-1.571184 -1.570796 -1.570409"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint3" type="revolute">
+    <parent link="arm_a_sts3215_4"/>
+    <child link="arm_a_merge2_2"/>
+    <origin xyz="0 0.000901 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3215_5">
+    <inertial>
+      <origin xyz="0 -0.01788 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4354e-05" ixy="-4.5315e-09" ixz="1.3600e-11" iyy="1.2036e-05" iyz="9.5296e-08" izz="7.7063e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.111851 0.102349 -0.1287" rpy="-1.570677 1.570796 1.570915"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_5.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.111851 0.102349 -0.1287" rpy="-1.570677 1.570796 1.570915"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_5.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3215_5_fixed" type="fixed">
+    <parent link="arm_a_merge2_2"/>
+    <child link="arm_a_sts3215_5"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_merge2_3">
+    <inertial>
+      <origin xyz="0.00017 -0.018657 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="2.2923e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="-2.7892e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.112851 0.1148 0.000551" rpy="-1.571631 -1.570796 -1.569961"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_3.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.112851 0.1148 0.000551" rpy="-1.571631 -1.570796 -1.569961"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_merge2_3.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint4" type="revolute">
+    <parent link="arm_a_sts3215_5"/>
+    <child link="arm_a_merge2_3"/>
+    <origin xyz="0 0.0006 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3215_3">
+    <inertial>
+      <origin xyz="0 -0.018322 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4354e-05" ixy="-4.5498e-09" ixz="9.6252e-12" iyy="1.2036e-05" iyz="-9.5321e-08" izz="7.7062e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.112451 0.101749 -0.1287" rpy="1.573328 1.570796 1.573328"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_3.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.112451 0.101749 -0.1287" rpy="1.573328 1.570796 1.573328"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_3.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3215_3_fixed" type="fixed">
+    <parent link="arm_a_merge2_3"/>
+    <child link="arm_a_sts3215_3"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_wrist">
+    <inertial>
+      <origin xyz="0.033844 0.019438 -0.007947" rpy="0 0 0"/>
+      <mass value="0.025519"/>
+      <inertia ixx="1.3108e-05" ixy="-1.3181e-07" ixz="3.9390e-06" iyy="1.7716e-05" iyz="4.4573e-08" izz="1.9475e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.111899 0.064149 -0.00495" rpy="1.596465 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_wrist.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.111899 0.064149 -0.00495" rpy="1.596465 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_wrist.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint5" type="revolute">
+    <parent link="arm_a_sts3215_3"/>
+    <child link="arm_a_wrist"/>
+    <origin xyz="0 -0.0383 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0000" upper="3.1416" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3215_6">
+    <inertial>
+      <origin xyz="0.052422 0.019647 -0.017757" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.2031e-05" ixy="-9.5692e-09" ixz="-9.5327e-08" iyy="1.4349e-05" iyz="1.6071e-11" izz="7.6962e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.111899 0.192249 -0.01745" rpy="0.052723 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_6.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.111899 0.192249 -0.01745" rpy="0.052723 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_6.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3215_6_fixed" type="fixed">
+    <parent link="arm_a_wrist"/>
+    <child link="arm_a_sts3215_6"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_gripper_1">
+    <inertial>
+      <origin xyz="0.043641 -0.00047 -0.014381" rpy="0 0 0"/>
+      <mass value="0.025921"/>
+      <inertia ixx="9.0235e-06" ixy="-2.1818e-07" ixz="8.7572e-07" iyy="2.7646e-05" iyz="-3.0866e-08" izz="3.0635e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.180299 0.044301 0" rpy="1.62352 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_gripper_1.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.180299 0.044301 0" rpy="1.62352 -1.570796 -1.62352"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_gripper_1.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_joint6" type="revolute">
+    <parent link="arm_a_sts3215_6"/>
+    <child link="arm_a_gripper_1"/>
+    <origin xyz="0.0684 0.019648 -0.00495" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0000" upper="6.2832" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_a_sts3215_7">
+    <inertial>
+      <origin xyz="0.026301 0.00077 0.000193" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4343e-05" ixy="-1.5009e-08" ixz="-1.9649e-11" iyy="1.2026e-05" iyz="-9.5288e-08" izz="7.6854e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.180849 0.215101 0.0005" rpy="1.623281 -1.570796 -1.623281"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_7.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.180849 0.215101 0.0005" rpy="1.623281 -1.570796 -1.623281"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_sts3215_7.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_sts3215_7_fixed" type="fixed">
+    <parent link="arm_a_gripper_1"/>
+    <child link="arm_a_sts3215_7"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_a_gripper_2">
+    <inertial>
+      <origin xyz="0.035324 -0.018991 0.000973" rpy="0 0 0"/>
+      <mass value="0.014562"/>
+      <inertia ixx="3.2637e-06" ixy="2.7195e-08" ixz="2.6090e-08" iyy="1.0597e-05" iyz="1.4854e-09" izz="1.2709e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.207149 0.025101 -0.01295" rpy="1.624476 -1.570796 -1.624476"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_gripper_2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.207149 0.025101 -0.01295" rpy="1.624476 -1.570796 -1.624476"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_a_gripper_2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_a_gripper_joint" type="revolute">
+    <parent link="arm_a_sts3215_7"/>
+    <child link="arm_a_gripper_2"/>
+    <origin xyz="0.0263 0.01925 0.013" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="0.0000" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_servo_base">
+    <inertial>
+      <origin xyz="0.032428 -0.196607 0.720114" rpy="0 0 0"/>
+      <mass value="0.089575"/>
+      <inertia ixx="1.6232e-05" ixy="-2.3376e-08" ixz="-2.7864e-07" iyy="2.8534e-05" iyz="-1.7108e-09" izz="2.4457e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.040149 -0.196138 0.720321" rpy="3.141593 0 1.570796"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_servo_base.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.040149 -0.196138 0.720321" rpy="3.141593 0 1.570796"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_servo_base.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_servo_base_fixed" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_b_servo_base"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_merge">
+    <inertial>
+      <origin xyz="0.027871 0.000869 -0.017787" rpy="0 0 0"/>
+      <mass value="0.017918"/>
+      <inertia ixx="8.0952e-06" ixy="-1.9232e-07" ixz="4.2807e-08" iyy="8.9403e-06" iyz="2.3275e-09" izz="6.4557e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.054149 0.00075 -0.017324" rpy="-0.221495 -1.570796 -1.349302"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.054149 0.00075 -0.017324" rpy="-0.221495 -1.570796 -1.349302"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint1" type="revolute">
+    <parent link="arm_b_servo_base"/>
+    <child link="arm_b_merge"/>
+    <origin xyz="0.047141 -0.196589 0.738721" rpy="0 0 0"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="-1.5708" upper="1.5708" effort="4.9" velocity="7.85"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3250_2">
+    <inertial>
+      <origin xyz="0.054393 -0.000571 -0.01793" rpy="0 0 0"/>
+      <mass value="0.074500"/>
+      <inertia ixx="1.0451e-05" ixy="1.2909e-07" ixz="-4.8988e-11" iyy="1.6310e-05" iyz="1.0792e-10" izz="1.9450e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.047141 0.196589 -0.738721" rpy="0 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3250_2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.047141 0.196589 -0.738721" rpy="0 0 0"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3250_2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3250_2_fixed" type="fixed">
+    <parent link="arm_b_merge"/>
+    <child link="arm_b_sts3250_2"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_merge2_1">
+    <inertial>
+      <origin xyz="0.00017 -0.017744 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="-2.2909e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="2.7818e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="3.131432 -1.570796 -1.560635"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="3.131432 -1.570796 -1.560635"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint2" type="revolute">
+    <parent link="arm_b_sts3250_2"/>
+    <child link="arm_b_merge2_1"/>
+    <origin xyz="0.0672 0.01735 -0.01793" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.1416" upper="-0.0000" effort="4.9" velocity="7.85"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3215_4">
+    <inertial>
+      <origin xyz="0 -0.018822 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4358e-05" ixy="-1.1400e-11" ixz="1.8007e-12" iyy="1.2041e-05" iyz="-9.5310e-08" izz="7.7154e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.018601 -0.1287" rpy="-0.03355 1.570796 1.537247"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.018601 -0.1287" rpy="-0.03355 1.570796 1.537247"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3215_4_fixed" type="fixed">
+    <parent link="arm_b_merge2_1"/>
+    <child link="arm_b_sts3215_4"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_merge2_2">
+    <inertial>
+      <origin xyz="0.00017 -0.017744 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="-2.2909e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="2.7818e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="-3.107954 -1.570796 -1.604435"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="-3.107954 -1.570796 -1.604435"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint3" type="revolute">
+    <parent link="arm_b_sts3215_4"/>
+    <child link="arm_b_merge2_2"/>
+    <origin xyz="0 -0.000901 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3215_5">
+    <inertial>
+      <origin xyz="0 -0.018521 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4358e-05" ixy="-1.1400e-11" ixz="1.8007e-12" iyy="1.2041e-05" iyz="-9.5310e-08" izz="7.7154e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.0183 -0.1287" rpy="-1.202251 1.570796 0.368545"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.0183 -0.1287" rpy="-1.202251 1.570796 0.368545"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3215_5_fixed" type="fixed">
+    <parent link="arm_b_merge2_2"/>
+    <child link="arm_b_sts3215_5"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_merge2_3">
+    <inertial>
+      <origin xyz="0.00017 -0.017744 -0.063978" rpy="0 0 0"/>
+      <mass value="0.038030"/>
+      <inertia ixx="6.4847e-05" ixy="-2.2909e-09" ixz="1.7577e-07" iyy="5.9124e-05" iyz="2.7818e-08" izz="1.3347e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="-1.938454 -1.570796 -2.773935"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.013051 -0.0187 0.000551" rpy="-1.938454 -1.570796 -2.773935"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_merge2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint4" type="revolute">
+    <parent link="arm_b_sts3215_5"/>
+    <child link="arm_b_merge2_3"/>
+    <origin xyz="0 -0.0006 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3215_3">
+    <inertial>
+      <origin xyz="0 -0.018079 -0.128393" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4358e-05" ixy="-1.1400e-11" ixz="-1.8007e-12" iyy="1.2041e-05" iyz="9.5310e-08" izz="7.7154e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.0183 -0.1287" rpy="3.107872 1.570796 1.537076"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.0183 -0.1287" rpy="3.107872 1.570796 1.537076"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3215_3_fixed" type="fixed">
+    <parent link="arm_b_merge2_3"/>
+    <child link="arm_b_sts3215_3"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_wrist">
+    <inertial>
+      <origin xyz="0.033844 0.025462 -0.007947" rpy="0 0 0"/>
+      <mass value="0.025519"/>
+      <inertia ixx="1.3108e-05" ixy="1.3173e-07" ixz="3.9390e-06" iyy="1.7716e-05" iyz="-4.4554e-08" izz="1.9476e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.0759 0.025252 -0.00495" rpy="0.804138 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_wrist.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.0759 0.025252 -0.00495" rpy="0.804138 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_wrist.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint5" type="revolute">
+    <parent link="arm_b_sts3215_3"/>
+    <child link="arm_b_wrist"/>
+    <origin xyz="0 -0.043 -0.1412" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0000" upper="3.1416" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3215_6">
+    <inertial>
+      <origin xyz="0.052421 0.025252 -0.017757" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.2041e-05" ixy="-1.1400e-11" ixz="-9.5310e-08" iyy="1.4358e-05" iyz="1.8007e-12" izz="7.7154e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0522 0.025252 -0.01745" rpy="2.345412 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0522 0.025252 -0.01745" rpy="2.345412 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3215_6_fixed" type="fixed">
+    <parent link="arm_b_wrist"/>
+    <child link="arm_b_sts3215_6"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_gripper_1">
+    <inertial>
+      <origin xyz="0.041141 0.00047 -0.014381" rpy="0 0 0"/>
+      <mass value="0.025921"/>
+      <inertia ixx="9.0235e-06" ixy="2.1818e-07" ixz="8.7572e-07" iyy="2.7646e-05" iyz="3.0866e-08" izz="3.0635e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.147 0 0" rpy="0.774616 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_gripper_1.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.147 0 0" rpy="0.774616 -1.570796 -2.345412"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_gripper_1.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_joint6" type="revolute">
+    <parent link="arm_b_sts3215_6"/>
+    <child link="arm_b_gripper_1"/>
+    <origin xyz="0.0709 0.025252 -0.00495" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit lower="0.0000" upper="6.2832" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+  <link name="arm_b_sts3215_7">
+    <inertial>
+      <origin xyz="0.0238 -0.000771 0.000193" rpy="0 0 0"/>
+      <mass value="0.055000"/>
+      <inertia ixx="1.4358e-05" ixy="1.1400e-11" ixz="1.8007e-12" iyy="1.2041e-05" iyz="9.5310e-08" izz="7.7154e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0238 -0.00055 0.0005" rpy="0.779173 -1.570796 -2.349969"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="servo_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0238 -0.00055 0.0005" rpy="0.779173 -1.570796 -2.349969"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_sts3215.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_sts3215_7_fixed" type="fixed">
+    <parent link="arm_b_gripper_1"/>
+    <child link="arm_b_sts3215_7"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="arm_b_gripper_2">
+    <inertial>
+      <origin xyz="0.035324 -0.017409 0.000973" rpy="0 0 0"/>
+      <mass value="0.014562"/>
+      <inertia ixx="3.2637e-06" ixy="-2.7195e-08" ixz="2.6090e-08" iyy="1.0597e-05" iyz="-1.4854e-09" izz="1.2709e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.17075 -0.0177 -0.01295" rpy="0.777991 -1.570796 -2.348787"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_gripper_2.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="petg_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.17075 -0.0177 -0.01295" rpy="0.777991 -1.570796 -2.348787"/>
+      <geometry><mesh filename="package://arm_body_description/meshes/arm_b_gripper_2.stl" scale="0.001 0.001 0.001"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_b_gripper_joint" type="revolute">
+    <parent link="arm_b_sts3215_7"/>
+    <child link="arm_b_gripper_2"/>
+    <origin xyz="0.0238 0.01715 0.013" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="-0.0000" upper="1.5708" effort="2.94" velocity="4.72"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+</robot>

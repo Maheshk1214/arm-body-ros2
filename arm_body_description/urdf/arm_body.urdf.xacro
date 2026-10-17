@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<robot name="arm_body" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Links, joints, meshes, masses and inertias generated from Fusion -->
+  <xacro:include filename="$(find arm_body_description)/urdf/arm_body_core.xacro"/>
+
+  <!-- Self-collision (arm vs body, arm vs arm) in Gazebo. Off by default.
+       Turn on with:  ros2 launch arm_body_description gazebo.launch.py self_collide:=true -->
+  <xacro:arg name="self_collide" default="false"/>
+  <xacro:if value="$(arg self_collide)">
+    <gazebo reference="base_link"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_servo_base"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_merge"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3250_2"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_merge2_1"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3215_4"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_merge2_2"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3215_5"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_merge2_3"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3215_3"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_wrist"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3215_6"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_gripper_1"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_sts3215_7"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_a_gripper_2"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_servo_base"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_merge"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3250_2"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_merge2_1"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3215_4"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_merge2_2"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3215_5"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_merge2_3"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3215_3"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_wrist"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3215_6"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_gripper_1"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_sts3215_7"><self_collide>true</self_collide></gazebo>
+    <gazebo reference="arm_b_gripper_2"><self_collide>true</self_collide></gazebo>
+  </xacro:if>
+
+  <!-- ros2_control: position-controlled joints, driven by Gazebo (gz_ros2_control) -->
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="arm_a_joint1">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_joint2">
+      <command_interface name="position">
+        <param name="min">-3.1416</param>
+        <param name="max">0.0000</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_joint3">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_joint4">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_joint5">
+      <command_interface name="position">
+        <param name="min">0.0000</param>
+        <param name="max">3.1416</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_joint6">
+      <command_interface name="position">
+        <param name="min">0.0000</param>
+        <param name="max">6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_a_gripper_joint">
+      <command_interface name="position">
+        <param name="min">0.0000</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint1">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint2">
+      <command_interface name="position">
+        <param name="min">-3.1416</param>
+        <param name="max">-0.0000</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint3">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint4">
+      <command_interface name="position">
+        <param name="min">-1.5708</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint5">
+      <command_interface name="position">
+        <param name="min">0.0000</param>
+        <param name="max">3.1416</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_joint6">
+      <command_interface name="position">
+        <param name="min">0.0000</param>
+        <param name="max">6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="arm_b_gripper_joint">
+      <command_interface name="position">
+        <param name="min">-0.0000</param>
+        <param name="max">1.5708</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <!-- Gazebo Harmonic: load the ros2_control plugin with our controller config -->
+  <gazebo>
+    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find arm_body_description)/config/controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>
