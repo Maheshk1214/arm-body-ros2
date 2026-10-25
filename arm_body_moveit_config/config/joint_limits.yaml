@@ -1,0 +1,77 @@
+# Overrides/additions to the URDF joint limits, used by MoveIt's time parameterisation.
+# Velocities match the URDF. The URDF has no acceleration limits, so these are conservative
+# placeholders and still need to be checked against the real Feetech servos.
+default_velocity_scaling_factor: 0.1
+default_acceleration_scaling_factor: 0.1
+
+joint_limits:
+  arm_a_joint1:
+    has_velocity_limits: true
+    max_velocity: 7.85
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_joint2:
+    has_velocity_limits: true
+    max_velocity: 7.85
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_joint3:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_joint4:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_joint5:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_joint6:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_a_gripper_joint:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint1:
+    has_velocity_limits: true
+    max_velocity: 7.85
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint2:
+    has_velocity_limits: true
+    max_velocity: 7.85
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint3:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint4:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint5:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_joint6:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0
+  arm_b_gripper_joint:
+    has_velocity_limits: true
+    max_velocity: 4.72
+    has_acceleration_limits: true
+    max_acceleration: 3.0

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Semantic description of the dual-arm Arm + Body robot for MoveIt.
+     No virtual joint: the URDF already fixes base_link to the "world" link. -->
+<robot name="arm_body">
+    <!-- Arms: joint1..joint6, from the servo base up to the gripper palm (gripper_1) -->
+    <group name="arm_a">
+        <chain base_link="arm_a_servo_base" tip_link="arm_a_gripper_1"/>
+    </group>
+    <group name="arm_b">
+        <chain base_link="arm_b_servo_base" tip_link="arm_b_gripper_1"/>
+    </group>
+    <group name="both_arms">
+        <group name="arm_a"/>
+        <group name="arm_b"/>
+    </group>
+
+    <!-- Grippers: one revolute finger each (0 = closed, opens towards +1.57) -->
+    <group name="gripper_a">
+        <link name="arm_a_sts3215_7"/>
+        <link name="arm_a_gripper_2"/>
+        <joint name="arm_a_gripper_joint"/>
+    </group>
+    <group name="gripper_b">
+        <link name="arm_b_sts3215_7"/>
+        <link name="arm_b_gripper_2"/>
+        <joint name="arm_b_gripper_joint"/>
+    </group>
+
+    <!-- Named states -->
+    <group_state name="home" group="arm_a">
+        <joint name="arm_a_joint1" value="0"/>
+        <joint name="arm_a_joint2" value="0"/>
+        <joint name="arm_a_joint3" value="0"/>
+        <joint name="arm_a_joint4" value="0"/>
+        <joint name="arm_a_joint5" value="0"/>
+        <joint name="arm_a_joint6" value="0"/>
+    </group_state>
+    <group_state name="home" group="arm_b">
+        <joint name="arm_b_joint1" value="0"/>
+        <joint name="arm_b_joint2" value="0"/>
+        <joint name="arm_b_joint3" value="0"/>
+        <joint name="arm_b_joint4" value="0"/>
+        <joint name="arm_b_joint5" value="0"/>
+        <joint name="arm_b_joint6" value="0"/>
+    </group_state>
+    <group_state name="home" group="both_arms">
+        <joint name="arm_a_joint1" value="0"/>
+        <joint name="arm_a_joint2" value="0"/>
+        <joint name="arm_a_joint3" value="0"/>
+        <joint name="arm_a_joint4" value="0"/>
+        <joint name="arm_a_joint5" value="0"/>
+        <joint name="arm_a_joint6" value="0"/>
+        <joint name="arm_b_joint1" value="0"/>
+        <joint name="arm_b_joint2" value="0"/>
+        <joint name="arm_b_joint3" value="0"/>
+        <joint name="arm_b_joint4" value="0"/>
+        <joint name="arm_b_joint5" value="0"/>
+        <joint name="arm_b_joint6" value="0"/>
+    </group_state>
+    <group_state name="closed" group="gripper_a">
+        <joint name="arm_a_gripper_joint" value="0"/>
+    </group_state>
+    <group_state name="open" group="gripper_a">
+        <joint name="arm_a_gripper_joint" value="1.2"/>
+    </group_state>
+    <group_state name="closed" group="gripper_b">
+        <joint name="arm_b_gripper_joint" value="0"/>
+    </group_state>
+    <group_state name="open" group="gripper_b">
+        <joint name="arm_b_gripper_joint" value="1.2"/>
+    </group_state>
+
+    <!-- End effectors -->
+    <end_effector name="arm_a_ee" parent_link="arm_a_gripper_1" group="gripper_a" parent_group="arm_a"/>
+    <end_effector name="arm_b_ee" parent_link="arm_b_gripper_1" group="gripper_b" parent_group="arm_b"/>
+
+    <!-- Self-collision matrix from `ros2 run moveit_setup_assistant collisions_updater` (options: default, always).
+         Adjacent/Default pairs, plus "Never" pairs found collision-free in all of: one 100k-sample run and
+         three independent 1M-sample runs. A pair is also kept enabled when its mirror on the other arm was
+         seen colliding. Sampling cannot prove a pair never collides: check suspicious motions in RViz. -->
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_sts3215_6" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_sts3215_7" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_sts3215_7" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_servo_base" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_sts3250_2" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3215_4" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3250_2" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3215_4" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3215_5" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3215_3" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3215_5" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_servo_base" link2="base_link" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_wrist" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_sts3215_6" link2="arm_a_wrist" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_sts3215_6" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_sts3215_7" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_sts3215_7" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_servo_base" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_sts3250_2" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3215_4" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3250_2" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3215_4" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3215_5" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3215_3" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3215_5" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_servo_base" link2="base_link" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_wrist" reason="Adjacent"/>
+    <disable_collisions link1="arm_b_sts3215_6" link2="arm_b_wrist" reason="Adjacent"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_wrist" reason="Default"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_wrist" reason="Default"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_gripper_2" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_1" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_gripper_2" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_merge2_1" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_b_merge" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_b_merge2_1" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_merge" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_b_merge" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_1" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_2" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_merge2_3" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_b_merge" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_b_merge2_1" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_servo_base" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_3" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_a_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_4" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_5" link2="arm_a_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_5" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_5" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_5" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_6" link2="arm_a_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_6" link2="arm_a_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3215_7" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3250_2" link2="arm_a_wrist" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3250_2" link2="arm_b_merge" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3250_2" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3250_2" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_a_sts3250_2" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_gripper_2" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_1" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_gripper_2" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_merge2_1" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_merge" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_merge2_2" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_1" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_merge2_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_servo_base" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3215_3" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_2" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_merge2_3" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_servo_base" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_servo_base" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_servo_base" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_sts3215_4" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_3" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="arm_b_sts3215_5" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_4" link2="base_link" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_5" link2="arm_b_sts3215_6" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_5" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_5" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_5" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_6" link2="arm_b_sts3215_7" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_6" link2="arm_b_sts3250_2" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3215_7" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3250_2" link2="arm_b_wrist" reason="Never"/>
+    <disable_collisions link1="arm_b_sts3250_2" link2="base_link" reason="Never"/>
+</robot>

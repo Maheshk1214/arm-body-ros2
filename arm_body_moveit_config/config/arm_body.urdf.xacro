@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- MoveIt robot description: the same links/joints as Gazebo (arm_body_core.xacro) plus a
+     mock_components ros2_control block so the RViz demo can "execute" plans without Gazebo.
+     The Gazebo description (arm_body_description/urdf/arm_body.urdf.xacro) is not used here. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="arm_body">
+  <xacro:arg name="initial_positions_file" default="$(find arm_body_moveit_config)/config/initial_positions.yaml"/>
+
+  <xacro:include filename="$(find arm_body_description)/urdf/arm_body_core.xacro"/>
+
+  <xacro:include filename="$(find arm_body_moveit_config)/config/arm_body.ros2_control.xacro"/>
+  <xacro:arm_body_ros2_control name="MockSystem" initial_positions_file="$(arg initial_positions_file)"/>
+</robot>

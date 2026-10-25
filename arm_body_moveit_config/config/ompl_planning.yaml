@@ -1,0 +1,45 @@
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+# The order of the elements in the adapter corresponds to the order they are processed by the motion planning pipeline.
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+response_adapters:
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
+
+# Planner settings come from moveit_configs_utils' ompl_defaults.yaml (loaded automatically
+# because no planner_configs key is set here). Only the per-group planner list is chosen.
+arm_a:
+  default_planner_config: RRTConnect
+  planner_configs: &planners
+    - RRTConnect
+    - RRT
+    - RRTstar
+    - PRM
+    - KPIECE
+    - BKPIECE
+    - LBKPIECE
+    - EST
+    - TRRT
+  projection_evaluator: joints(arm_a_joint1,arm_a_joint2)
+  longest_valid_segment_fraction: 0.005
+arm_b:
+  default_planner_config: RRTConnect
+  planner_configs: *planners
+  projection_evaluator: joints(arm_b_joint1,arm_b_joint2)
+  longest_valid_segment_fraction: 0.005
+both_arms:
+  default_planner_config: RRTConnect
+  planner_configs: *planners
+  projection_evaluator: joints(arm_a_joint1,arm_b_joint1)
+  longest_valid_segment_fraction: 0.005
+gripper_a:
+  default_planner_config: RRTConnect
+  planner_configs: *planners
+gripper_b:
+  default_planner_config: RRTConnect
+  planner_configs: *planners

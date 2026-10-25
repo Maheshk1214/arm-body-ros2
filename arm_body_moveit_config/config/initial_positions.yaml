@@ -1,0 +1,16 @@
+# Default joint positions for the mock hardware in the RViz demo
+initial_positions:
+  arm_a_joint1: 0.0
+  arm_a_joint2: 0.0
+  arm_a_joint3: 0.0
+  arm_a_joint4: 0.0
+  arm_a_joint5: 0.0
+  arm_a_joint6: 0.0
+  arm_a_gripper_joint: 0.0
+  arm_b_joint1: 0.0
+  arm_b_joint2: 0.0
+  arm_b_joint3: 0.0
+  arm_b_joint4: 0.0
+  arm_b_joint5: 0.0
+  arm_b_joint6: 0.0
+  arm_b_gripper_joint: 0.0
