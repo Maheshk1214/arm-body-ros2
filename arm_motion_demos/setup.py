@@ -9,7 +9,8 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['package.xml', 'README.md']),
+        ('share/' + package_name + '/worlds', ['worlds/demo_recording.sdf']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,6 +26,9 @@ setup(
     entry_points={
         'console_scripts': [
             'arm_motion_node = arm_motion_demos.arm_motion_node:main',
+            'motion_demo = arm_motion_demos.motion_demo_node:main',
+            'check_motion_demos = arm_motion_demos.check_motion_demos:main',
+            'record_demo = arm_motion_demos.record_demo:main',
         ],
     },
 )

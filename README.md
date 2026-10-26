@@ -24,6 +24,8 @@ Full setup, commands and joint reference: **[docs/RUN_GUIDE.md](docs/RUN_GUIDE.m
 |---|---|
 | `arm_body_description/` | ROS 2 package: URDF/xacro, meshes, controllers, launch files |
 | `docs/RUN_GUIDE.md` | Install, build, RViz, Gazebo, joint/controller reference, troubleshooting |
+| `arm_body_moveit_config/` | MoveIt 2 configuration: mock demo and MoveIt on Gazebo ([README](arm_body_moveit_config/README.md)) |
+| `arm_motion_demos/` | Gesture demos (wave, dual-arm, 67 dance), sequences, tests, video recording ([README](arm_motion_demos/README.md)) |
 
 ## Key facts
 - 30 links, 14 controllable joints (6 per arm + 1 gripper per arm), 6.82 kg total

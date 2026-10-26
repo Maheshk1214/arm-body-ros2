@@ -10,6 +10,19 @@
   <depend>rclpy</depend>
   <depend>trajectory_msgs</depend>
   <depend>sensor_msgs</depend>
+  <!-- motion_demo: gestures from the SRDF home, URDF + MoveIt limits, MoveIt collision check -->
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>arm_body_description</exec_depend>
+  <exec_depend>arm_body_moveit_config</exec_depend>
+  <!-- check_motion_demos -->
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>shape_msgs</exec_depend>
+  <!-- record_demo: Gazebo's Python transport bindings (gz.transport13) come with Gazebo -->
+  <exec_depend>ffmpeg</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
