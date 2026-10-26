@@ -1,0 +1,53 @@
+# GIP Garage Motion Player settings. Edit and re-run ./run.sh; no rebuild needed.
+# Folders are relative to the ROS workspace (the folder that contains install/).
+
+# ROS 2 domain of the simulation. Keep it different from other projects on this
+# computer (run.sh refuses to start if something else already uses it).
+ros_domain_id: 215
+gz_partition: garage_motion_player
+
+simulation:
+  gui: true            # show the Gazebo window (false = headless, still records)
+  rviz: false          # also open MoveIt's RViz
+  start_timeout: 240   # s to wait for Gazebo, the controllers and MoveIt
+
+motion:
+  speed: 0.5               # 0.1 (slow) .. 1.0 (the fastest the joint limits allow)
+  tracking_tolerance: 0.2  # rad: stop if a joint is further than this from the plan
+
+# Live control (J): a terminal sends no key-release events, only the auto-repeat of a
+# held key, so a key counts as released when its repeats stop for this long (s).
+# first_gap must be longer than the keyboard's repeat delay (see `xset q`: 500 ms
+# here), repeat_gap several times its repeat interval (33/s here: 30 ms).
+live_control:
+  first_gap: 0.6
+  repeat_gap: 0.15
+
+# Menu names of the arms -> joint-name prefix in the robot description.
+# arm_a is the robot's own left arm (seen from the front it is on your right).
+arms:
+  left: arm_a
+  right: arm_b
+
+# Joints of one arm, in menu order: short name -> suffix of the full joint name
+# (full name = <arm prefix>_<suffix>), with a label and the swing for the
+# single-joint demo in rad (clipped to each joint's own safe range).
+joints:
+  joint1:  {suffix: joint1,        label: shoulder yaw,   amplitude: 0.5}
+  joint2:  {suffix: joint2,        label: shoulder pitch, amplitude: 0.6}
+  joint3:  {suffix: joint3,        label: upper arm,      amplitude: 0.5}
+  joint4:  {suffix: joint4,        label: elbow,          amplitude: 0.5}
+  joint5:  {suffix: joint5,        label: wrist pitch,    amplitude: 0.6}
+  joint6:  {suffix: joint6,        label: wrist roll,     amplitude: 1.0}
+  gripper: {suffix: gripper_joint, label: gripper,        amplitude: 0.8}
+
+# Start pose for the single-joint demos (rad, both arms): arms lifted clear of the
+# floor and angled outward. From home several swings would hit the floor (the
+# grippers hang ~2 cm above it), and joint5 could only move into it.
+dof_pose: {joint1: 0.5, joint2: -1.3, joint3: -0.5, joint4: 0.0, joint5: 1.5,
+           joint6: 0.01, gripper: 0.01}
+
+recordings:
+  folder: recordings   # <workspace>/recordings/<date>/...
+logs:
+  folder: logs/garage_motion_player

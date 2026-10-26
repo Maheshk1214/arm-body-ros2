@@ -1,5 +1,5 @@
 """
-Forward kinematics over the URDF collision meshes, for the tests.
+Forward kinematics over the URDF collision meshes (used by the tests).
 
 Mesh vertices are reduced to a 1 cm voxel grid, which is plenty for checking
 floor clearance and the distances between the arms and the body.

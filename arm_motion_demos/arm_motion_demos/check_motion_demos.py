@@ -21,7 +21,7 @@ import sys
 import time
 
 from arm_motion_demos import motions as m
-from arm_motion_demos.motion_demo_node import load_robot
+from arm_motion_demos.executor import load_robot
 from geometry_msgs.msg import Pose
 from moveit_msgs.msg import CollisionObject, PlanningScene
 from moveit_msgs.srv import ApplyPlanningScene

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>garage_motion_player</name>
+  <version>0.1.0</version>
+  <description>Menu-driven motion player for the GIP Garage dual-arm robot in Gazebo</description>
+  <maintainer email="eileenteoh10399@gmail.com">eileen</maintainer>
+  <license>TODO: License declaration</license>
+
+  <!-- motion engine, limits, SRDF home and trajectory execution -->
+  <exec_depend>arm_motion_demos</exec_depend>
+  <!-- the simulation it launches (Gazebo + controllers + MoveIt) -->
+  <exec_depend>arm_body_moveit_config</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <!-- check_player -->
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>shape_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

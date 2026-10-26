@@ -1,13 +1,10 @@
 """Offline tests of the gestures: limits, home, geometry and parameter checks."""
 import math
-import os
-import sys
 
+from arm_motion_demos import geometry
 from arm_motion_demos import motions as m
 import numpy as np
 import pytest
-
-sys.path.insert(0, os.path.dirname(__file__))
 
 share = pytest.importorskip('ament_index_python.packages').get_package_share_directory
 xacro = pytest.importorskip('xacro')
@@ -101,7 +98,6 @@ def test_gesture_waypoints_are_monotonic_and_end_at_rest(gestures, name):
 @pytest.mark.parametrize('name', ['wave_a', 'wave_b', 'dual_arm', 'dance67'])
 def test_gesture_clears_floor_body_and_other_arm(gestures, urdf, name):
     """Collision-mesh FK every 0.3 s: home itself hangs ~2 cm above the floor."""
-    geometry = pytest.importorskip('geometry')
     robot = geometry.Robot(urdf, share('arm_body_description'))
     motion = gestures[name]
     worst = np.full(4, np.inf)
