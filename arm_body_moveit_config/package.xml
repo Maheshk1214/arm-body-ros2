@@ -25,6 +25,13 @@
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
+  <!-- Gazebo integration (move_group_gazebo / moveit_gazebo launch files and check scripts) -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>controller_manager_msgs</exec_depend>
+  <exec_depend>moveit_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>shape_msgs</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

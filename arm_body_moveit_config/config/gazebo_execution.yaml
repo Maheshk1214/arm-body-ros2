@@ -1,0 +1,35 @@
+# move_group / RViz settings used only with Gazebo (move_group_gazebo.launch.py); the mock demo
+# keeps MoveIt's defaults and the URDF limits.
+/**:
+  ros__parameters:
+    trajectory_execution:
+      allowed_execution_duration_scaling: 1.2
+      allowed_goal_duration_margin: 0.5
+      allowed_start_tolerance: 0.01
+
+    # joint2 (max 0), joint5, joint6 and the grippers (min 0) have a limit at 0. Holding a joint
+    # exactly on its limit jams it in Gazebo: gravity pushes it ~1e-13 rad past, DART then ignores the
+    # position (velocity) command until the gravity torque reverses, and the arm snaps onto the floor.
+    # So in Gazebo, MoveIt's copy of these limits is narrowed by 5e-3 rad: it cannot plan to (or
+    # through) a position on the limit. The SRDF named states (home, closed) sit 1e-2 rad inside the
+    # limits, as do Gazebo's initial joint positions. Trade-off: a start state closer than 5e-3 rad to
+    # the limit (e.g. after a topic command to an all-zero pose) is rejected as out of bounds.
+    # This only affects planning; the URDF and the Gazebo joint limits are unchanged.
+    robot_description_planning:
+      joint_limits:
+        arm_a_joint2:
+          max_position: -0.005
+        arm_a_joint5:
+          min_position: 0.005
+        arm_a_joint6:
+          min_position: 0.005
+        arm_a_gripper_joint:
+          min_position: 0.005
+        arm_b_joint2:
+          max_position: -0.005
+        arm_b_joint5:
+          min_position: 0.005
+        arm_b_joint6:
+          min_position: 0.005
+        arm_b_gripper_joint:
+          min_position: 0.005

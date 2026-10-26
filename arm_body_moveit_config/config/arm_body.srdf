@@ -26,45 +26,46 @@
         <joint name="arm_b_gripper_joint"/>
     </group>
 
-    <!-- Named states -->
+    <!-- Named states. joint2 (max 0), joint5, joint6 and the grippers (min 0) are kept 0.01 rad
+         inside their limits: holding a joint exactly on its limit jams it in Gazebo (DART). -->
     <group_state name="home" group="arm_a">
         <joint name="arm_a_joint1" value="0"/>
-        <joint name="arm_a_joint2" value="0"/>
+        <joint name="arm_a_joint2" value="-0.01"/>
         <joint name="arm_a_joint3" value="0"/>
         <joint name="arm_a_joint4" value="0"/>
-        <joint name="arm_a_joint5" value="0"/>
-        <joint name="arm_a_joint6" value="0"/>
+        <joint name="arm_a_joint5" value="0.01"/>
+        <joint name="arm_a_joint6" value="0.01"/>
     </group_state>
     <group_state name="home" group="arm_b">
         <joint name="arm_b_joint1" value="0"/>
-        <joint name="arm_b_joint2" value="0"/>
+        <joint name="arm_b_joint2" value="-0.01"/>
         <joint name="arm_b_joint3" value="0"/>
         <joint name="arm_b_joint4" value="0"/>
-        <joint name="arm_b_joint5" value="0"/>
-        <joint name="arm_b_joint6" value="0"/>
+        <joint name="arm_b_joint5" value="0.01"/>
+        <joint name="arm_b_joint6" value="0.01"/>
     </group_state>
     <group_state name="home" group="both_arms">
         <joint name="arm_a_joint1" value="0"/>
-        <joint name="arm_a_joint2" value="0"/>
+        <joint name="arm_a_joint2" value="-0.01"/>
         <joint name="arm_a_joint3" value="0"/>
         <joint name="arm_a_joint4" value="0"/>
-        <joint name="arm_a_joint5" value="0"/>
-        <joint name="arm_a_joint6" value="0"/>
+        <joint name="arm_a_joint5" value="0.01"/>
+        <joint name="arm_a_joint6" value="0.01"/>
         <joint name="arm_b_joint1" value="0"/>
-        <joint name="arm_b_joint2" value="0"/>
+        <joint name="arm_b_joint2" value="-0.01"/>
         <joint name="arm_b_joint3" value="0"/>
         <joint name="arm_b_joint4" value="0"/>
-        <joint name="arm_b_joint5" value="0"/>
-        <joint name="arm_b_joint6" value="0"/>
+        <joint name="arm_b_joint5" value="0.01"/>
+        <joint name="arm_b_joint6" value="0.01"/>
     </group_state>
     <group_state name="closed" group="gripper_a">
-        <joint name="arm_a_gripper_joint" value="0"/>
+        <joint name="arm_a_gripper_joint" value="0.01"/>
     </group_state>
     <group_state name="open" group="gripper_a">
         <joint name="arm_a_gripper_joint" value="1.2"/>
     </group_state>
     <group_state name="closed" group="gripper_b">
-        <joint name="arm_b_gripper_joint" value="0"/>
+        <joint name="arm_b_gripper_joint" value="0.01"/>
     </group_state>
     <group_state name="open" group="gripper_b">
         <joint name="arm_b_gripper_joint" value="1.2"/>
