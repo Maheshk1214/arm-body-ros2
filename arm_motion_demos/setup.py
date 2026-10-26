@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-	'arm_motion_node = arm_motion_demos.arm_motion_node:main',
+            'arm_motion_node = arm_motion_demos.arm_motion_node:main',
         ],
     },
 )
