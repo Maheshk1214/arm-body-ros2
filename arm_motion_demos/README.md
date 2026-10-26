@@ -21,7 +21,7 @@ The original `arm_motion_node` (home → raised → home over the trajectory top
 Start a simulation first, in a terminal with the same `ROS_DOMAIN_ID` as below:
 ```bash
 source /opt/ros/jazzy/setup.bash
-source ~/moretea_arm_body_ws/install/setup.bash
+source ~/arm_body_ws/install/setup.bash
 export ROS_DOMAIN_ID=215 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST GZ_IP=127.0.0.1
 export GZ_PARTITION=moretea_215
 

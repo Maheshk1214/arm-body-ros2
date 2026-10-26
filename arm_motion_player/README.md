@@ -21,7 +21,7 @@ Play robot movements in the Gazebo simulation from a simple menu: no ROS 2 comma
 
 ## Start
 ```bash
-cd ~/moretea_arm_body_ws/src/arm-body-ros2/arm_motion_player
+cd ~/arm_body_ws/src/arm-body-ros2/arm_motion_player   # adjust to your workspace path
 ./run.sh               # Gazebo window + menu
 ./run.sh --headless    # no Gazebo window
 ```
@@ -88,7 +88,7 @@ Success means the robot reported the final pose, not that a controller said "don
 Home uses the direct path when MoveIt finds it free, otherwise a MoveIt collision-aware plan.
 
 ## Adding your own motions
-Put a `*.yaml` motion file in `~/moretea_arm_body_ws/motions/` (the folder in
+Put a `*.yaml` motion file in `~/arm_body_ws/motions/` (the folder in
 `motions.folders` of `config/player.yaml`) and restart `./run.sh`: it appears under **M**. The format, with an example, is in
 [`arm_motion_demos/README.md`](../arm_motion_demos/README.md#adding-a-motion). At start-up the
 player builds every motion with its defaults and checks it against the joint limits; a file
@@ -108,7 +108,7 @@ ros2 run arm_motion_player check_player --run-sh "$PWD/run.sh"   # live: starts 
 ## Troubleshooting
 | Message | What to do |
 |---|---|
-| `package '…' is not built` | `cd ~/moretea_arm_body_ws && colcon build`, then run `./run.sh` again |
+| `package '…' is not built` | `cd ~/arm_body_ws && colcon build`, then run `./run.sh` again |
 | `ROS domain 215 is already in use by …` | Close that simulation, or `./run.sh --attach` to use it, or change `ros_domain_id` |
 | `not ready after … s, still waiting for …` | See the log file named at start-up (`logs/arm_motion_player/`) |
 | `Not moved: … collision …` | The motion would hit something; it was not started |
