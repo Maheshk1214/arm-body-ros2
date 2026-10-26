@@ -1,10 +1,10 @@
-# GIP Garage Motion Player settings. Edit and re-run ./run.sh; no rebuild needed.
+# Moretea Arm Motion Player settings. Edit and re-run ./run.sh; no rebuild needed.
 # Folders are relative to the ROS workspace (the folder that contains install/).
 
 # ROS 2 domain of the simulation. Keep it different from other projects on this
 # computer (run.sh refuses to start if something else already uses it).
 ros_domain_id: 215
-gz_partition: garage_motion_player
+gz_partition: arm_motion_player
 
 simulation:
   gui: true            # show the Gazebo window (false = headless, still records)
@@ -47,7 +47,13 @@ joints:
 dof_pose: {joint1: 0.5, joint2: -1.3, joint3: -0.5, joint4: 0.0, joint5: 1.5,
            joint6: 0.01, gripper: 0.01}
 
+# Motion library: arm_motion_demos' motions/ (wave, dual_arm, dance67) plus every *.yaml
+# in these folders (relative to the workspace; a missing folder is fine). The file
+# format is described in arm_motion_demos/README.md ("Adding a motion").
+motions:
+  folders: [motions]
+
 recordings:
   folder: recordings   # <workspace>/recordings/<date>/...
 logs:
-  folder: logs/garage_motion_player
+  folder: logs/arm_motion_player

@@ -7,13 +7,9 @@ joint where it is. Each joint has its own range: the swing is clipped to
 LIMIT_MARGIN inside that joint's URDF limits, and a side with too little room
 is left out. The two sides are built separately so the caller can collision-
 check each one and keep only the safe ones (combine()).
-
-Jog moves are the user's own steps: jog_target() moves the selected joint(s)
-by a step or to an angle, clipped to the same safe band.
 """
 from dataclasses import dataclass
-import math
-from typing import List, Optional, Sequence
+from typing import List, Sequence
 
 from arm_motion_demos import motions as m
 import numpy as np
@@ -80,54 +76,3 @@ def combine(start, sides: Sequence[Side], limits: m.Limits, speed: float,
     for side in sides:
         b.move_to(side.target, label=side.label).move_to(start, label='back')
     return b.build(name)
-
-
-# --- jog: the user steps one joint by hand -----------------------------------------
-JOG_MIN_DURATION = 0.3  # s at speed 1.0: a small step should not take the usual 0.5 s
-JOG_MIN_STEP = 1e-3     # rad: a request that moves less than this is refused
-
-
-def jog_target(start: Sequence[float], joints: Sequence[str], limits: m.Limits,
-               delta: Optional[float] = None, goal: Optional[float] = None):
-    """
-    Pose with `joints` moved by `delta` rad, or to the angle `goal` rad; others unchanged.
-
-    Each joint is clipped to its own safe band. Returns (target, notes); notes say
-    where a joint was stopped at its limit. Raises MotionError if nothing would move.
-    """
-    if (delta is None) == (goal is None):
-        raise m.MotionError('give either a step or a target angle')
-    start = np.asarray(start, float)
-    target, notes, moved = start.copy(), [], False
-    for j in joints:
-        if j not in m.INDEX:
-            raise m.MotionError(f'unknown joint {j!r}')
-        i = m.INDEX[j]
-        lo, hi = limits.safe_lower[i], limits.safe_upper[i]
-        if not lo - 1e-6 <= start[i] <= hi + 1e-6:
-            raise m.MotionError(f'{j} is at {start[i]:+.3f} rad, outside its safe range: '
-                                'return home first')
-        wanted = goal if goal is not None else start[i] + delta
-        target[i] = float(np.clip(wanted, lo, hi))
-        if abs(target[i] - wanted) > 1e-9:
-            notes.append(f'{j} stopped at {math.degrees(target[i]):+.1f} deg, '
-                         f'{m.LIMIT_MARGIN} rad inside its limit')
-        moved = moved or abs(target[i] - start[i]) >= JOG_MIN_STEP
-    if not moved:
-        if goal is None:
-            word = 'upper' if delta > 0 else 'lower'
-            raise m.MotionError(f'{", ".join(joints)}: already at the {word} end of the '
-                                'safe range')
-        raise m.MotionError(f'{", ".join(joints)}: already there')
-    return target, notes
-
-
-def jog_motion(start, target, limits: m.Limits, speed: float) -> m.Motion:
-    """One minimum-jerk move, as short as the velocity/acceleration limits allow."""
-    start, target = np.asarray(start, float), np.asarray(target, float)
-    delta = np.abs(target - start)
-    t_vel = 1.875 * delta / (m.VEL_FRACTION * limits.velocity)
-    t_acc = np.sqrt(5.774 * delta / (m.ACC_FRACTION * limits.acceleration))
-    natural = max(JOG_MIN_DURATION, float(np.max(np.maximum(t_vel, t_acc))))
-    return m.MotionBuilder(start, limits, speed).move_to(
-        target, duration=natural / speed, label='jog').build('jog')

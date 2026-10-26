@@ -1,6 +1,6 @@
 """Live control: key hold detection, velocity ramp, limits, collision stop, failures."""
 from arm_motion_demos import motions as m
-from garage_motion_player import live_jog as lj
+from arm_motion_player import live_jog as lj
 import numpy as np
 import pytest
 

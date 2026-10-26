@@ -1,7 +1,7 @@
 """config/player.yaml loading and validation."""
 from pathlib import Path
 
-from garage_motion_player.config import ConfigError, load_config
+from arm_motion_player.config import ConfigError, load_config
 import pytest
 import yaml
 
@@ -26,6 +26,7 @@ def test_shipped_config_loads(tmp_path):
     assert [j.short for j in config.joints] == ['joint1', 'joint2', 'joint3', 'joint4',
                                                 'joint5', 'joint6', 'gripper']
     assert config.recordings_dir == tmp_path / 'recordings'
+    assert config.motion_folders == [tmp_path / 'motions']
     assert config.first_gap > 0.5 and config.repeat_gap < config.first_gap  # 500 ms repeat delay
 
 
@@ -50,6 +51,8 @@ def test_joint_names_follow_the_arm_prefix(tmp_path):
     (lambda d: d['dof_pose'].update(joint5='up'), 'dof_pose.joint5'),
     (lambda d: d['live_control'].update(first_gap=0.0), 'live_control.first_gap'),
     (lambda d: d.pop('live_control'), 'missing "live_control.first_gap"'),
+    (lambda d: d['motions'].update(folders='motions'), 'motions.folders'),
+    (lambda d: d['motions'].update(folders=['']), 'motions.folders'),
 ])
 def test_invalid_settings_are_reported(tmp_path, data, change, match):
     change(data)

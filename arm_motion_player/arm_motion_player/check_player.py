@@ -1,8 +1,7 @@
 """
 Live check of the motion player: drives ./run.sh through its menu.
 
-    ros2 run garage_motion_player check_player [--run-sh PATH] [--quick]
-                                               [--only menu|live]
+    ros2 run arm_motion_player check_player [--run-sh PATH] [--only menu|live]
 
 Starts run.sh --headless, types menu choices when the prompts appear, and
 records /joint_states with its own node, so the checks rest on what the
@@ -22,8 +21,8 @@ import time
 
 from arm_motion_demos import motions as m
 from arm_motion_demos.executor import load_robot
-from garage_motion_player import simulation_manager as sm
-from garage_motion_player.config import load_config
+from arm_motion_player import simulation_manager as sm
+from arm_motion_player.config import load_config
 from geometry_msgs.msg import Pose
 from moveit_msgs.msg import CollisionObject, PlanningScene, RobotState
 from moveit_msgs.srv import ApplyPlanningScene, GetStateValidity
@@ -35,7 +34,7 @@ from shape_msgs.msg import SolidPrimitive
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 STARTED = []  # every Player, so main() can make sure none is left running
-PROMPT = re.compile(r'(Choose: |Joint: |Jog: |Angle in degrees: |\[Y/n\] |Speed .*: )$')
+PROMPT = re.compile(r'(Choose: |Joint: |\[Y/n\] |Speed .*: |Motion: |Parameters \(.*\): )$')
 
 
 class Player:
@@ -157,6 +156,10 @@ class Checker(Node):
         self.report(min(span[idx]) >= at_least and others < 0.005,
                     f'{label}: {"+".join(joints)} moved {min(span[idx]):.2f} rad, '
                     f'other joints {others:.4f} rad')
+
+    def at_home_quiet(self) -> bool:
+        self.spin_for(0.5)
+        return bool(np.abs(self.latest - self.home).max() < 0.02)
 
     def at_home(self, label):
         self.spin_for(0.5)
@@ -360,6 +363,91 @@ def _live_scenario(c: Checker, p: Player, args, config, domain: int) -> None:
     c.report(domain_empty(domain), 'no simulation processes left after live control')
 
 
+def moved_joints(qs, threshold=0.05):
+    """Names of the joints that moved more than `threshold` rad in the samples."""
+    if not len(qs):
+        return set()
+    span = np.ptp(qs, axis=0)
+    return {j for j, s in zip(m.JOINTS, span) if s > threshold}
+
+
+def library_scenario(c: Checker, p: Player) -> None:
+    arm_a = set(m.ARM_A) | {'arm_a_gripper_joint'}
+    arm_b = set(m.ARM_B) | {'arm_b_gripper_joint'}
+    c.step(p, 'v', 30)
+    c.step(p, '1.0', 30)  # full speed: the gestures were checked at 1.0 before
+    c.step(p, '1', 30)    # left arm
+    out, _ = c.step(p, 'm', 30)
+    c.report('[1] 67 dance' in out and '[2] Dual-arm routine' in out and '[3] Wave' in out
+             and 'tempo=54.0 bpm (10..200)' in out, 'M lists the YAML motion library', out)
+    out, _ = c.step(p, '3', 30)
+    c.report('Parameters (Enter = repetitions=3 arm=arm_a)' in out,
+             'wave asks for its parameters with the defaults', out)
+    out, qs = c.step(p, '', 300)
+    c.report('All checks passed' in out and '> Wave (repetitions=3 arm=arm_a)' in out and
+             'Done: back at home' in out, 'left arm: wave played from the library', out)
+    c.report(moved_joints(qs) and moved_joints(qs) <= arm_a,
+             f'left wave moved only arm_a: {sorted(moved_joints(qs))}')
+    c.within_limits('wave', qs)
+    c.at_home('after wave')
+
+    c.step(p, '2', 30)  # right arm
+    c.step(p, 'm', 30)
+    c.step(p, '3', 30)
+    out, qs = c.step(p, 'repetitions=1', 300)
+    c.report('> Wave (repetitions=1 arm=arm_b)' in out and 'Done: back at home' in out,
+             'right arm: wave with repetitions=1 uses arm_b', out)
+    c.report(moved_joints(qs) and moved_joints(qs) <= arm_b,
+             f'right wave moved only arm_b: {sorted(moved_joints(qs))}')
+
+    c.step(p, 'm', 30)
+    c.step(p, '1', 30)
+    out, qs = c.step(p, 'tempo=500', 60)
+    c.report('Not played: dance67 tempo' in out and not moved_joints(qs, 0.005),
+             'out-of-range parameter refused, nothing moved', out)
+    out, qs = c.step(p, 'm', 30)
+    out, qs = c.step(p, 'moonwalk', 30)
+    c.report('"moonwalk" is not in the list' in out and not moved_joints(qs, 0.005),
+             'unknown motion refused, nothing moved', out)
+
+    c.step(p, '1', 30)
+    c.step(p, 'm', 30)
+    c.step(p, 'dual_arm', 30)
+    out, qs = c.step(p, '', 600)
+    c.report('> Dual-arm routine (repetitions=2)' in out and 'Done: back at home' in out,
+             'dual_arm played from the library', out)
+    c.within_limits('dual_arm', qs)
+    c.at_home('after dual_arm')
+    c.step(p, 'm', 30)
+    c.step(p, '1', 30)
+    out, qs = c.step(p, 'repetitions=2', 600)
+    c.report('> 67 dance (repetitions=2 tempo=54.0 amplitude=0.25)' in out and
+             'Done: back at home' in out, 'dance67 with repetitions=2', out)
+    c.within_limits('dance67', qs)
+    c.at_home('after dance67')
+
+    # S during a motion: it stops and the robot holds away from home
+    c.step(p, 'm', 30)
+    c.step(p, '1', 30)
+    p.send('')
+    c.samples = []
+    c.wait(p, 120.0, until=lambda t: '> 67 dance' in t and 'start (' in t)
+    c.spin_for(3.0)
+    out, qs = c.step(p, 's')
+    c.report('Stopped: ' in out and 'press H' in out, 'S stops a library motion', out)
+    c.report(not c.at_home_quiet(), 'robot left away from home by the stop')
+    # a motion from away from home: the player returns home first
+    c.step(p, 'm', 30)
+    c.step(p, '2', 30)
+    out, qs = c.step(p, 'repetitions=1', 400)
+    c.report('returning home first' in out and 'Done: at home' in out and
+             '> Dual-arm routine (repetitions=1)' in out and 'Done: back at home' in out,
+             'motion away from home goes home first, then plays', out)
+    c.at_home('after dual_arm from away')
+    c.step(p, 'v', 30)
+    c.step(p, '0.5', 30)
+
+
 def scenarios(c: Checker, args, config, domain: int) -> None:
     """Run every scenario in order; returns early if the player never starts."""
     # 1. no simulation: --attach must give up with a clear message
@@ -459,81 +547,21 @@ def scenarios(c: Checker, args, config, domain: int) -> None:
     c.at_home('home via MoveIt')
     c.report(c.box(False), 'obstacle removed')
 
+    # 9. the removed actions (all joints, step jog, custom sequence) are not options
+    for key in 'atc':
+        out, qs = c.step(p, key, 30)
+        c.report(f'"{key}" is not an option' in out and not moved_joints(qs, 0.005),
+                 f'"{key}" is no longer a menu option', out)
+
     # 9a. live control needs a terminal: through this pipe it is refused, nothing moves
     out, qs = c.step(p, 'j', 30)
-    c.report('needs a real terminal' in out and 'Use T' in out and
+    c.report('needs a real terminal' in out and
              (not len(qs) or np.ptp(qs, axis=0).max() < 0.005),
              'live control through a pipe is refused with a hint', out)
 
-    # 9. jog: the user steps one joint. From home (left arm): only joint1 moves, by
-    # the step; several steps at once; a typed angle; a clipped angle; a step into
-    # the floor is refused without moving; P lifts, then the same step works.
-    j1 = m.INDEX['arm_a_joint1']
-    out, _ = c.step(p, 't', 30)
-    out, _ = c.step(p, '1', 30)
-    c.report('JOG  Left arm: joint1' in out and 'Step: 5 deg' in out
-             and 'steps that would hit it are refused' in out,
-             'jog screen shows the joint, the step and the floor hint at home', out)
-    start = c.latest[j1]
-    out, qs = c.step(p, '+', 60)
-    c.report('Done' in out, 'jog + completed', out)
-    c.only_moved('jog +5 deg', qs, ['arm_a_joint1'], np.radians(5) - 0.01)
-    c.report(abs(c.latest[j1] - start - np.radians(5)) < 0.01,
-             f'jog +5 deg: joint1 moved {np.degrees(c.latest[j1] - start):+.1f} deg')
-    start = c.latest[j1]
-    out, qs = c.step(p, '---', 60)
-    c.report(abs(c.latest[j1] - start + np.radians(15)) < 0.01,
-             f'jog --- (3 steps): joint1 moved {np.degrees(c.latest[j1] - start):+.1f} deg',
-             out)
-    c.step(p, '>', 30)
-    start = c.latest[j1]
-    out, qs = c.step(p, '+', 60)
-    c.report('Step: 10 deg' in out and abs(c.latest[j1] - start - np.radians(10)) < 0.01,
-             f'bigger step: joint1 moved {np.degrees(c.latest[j1] - start):+.1f} deg', out)
-    c.step(p, 'g', 30)
-    out, qs = c.step(p, '20', 60)
-    c.report(abs(c.latest[j1] - np.radians(20)) < 0.01,
-             f'jog to 20 deg: joint1 at {np.degrees(c.latest[j1]):+.1f} deg', out)
-    c.step(p, 'g', 30)
-    out, qs = c.step(p, '999', 120)
-    c.report('stopped at' in out and abs(c.latest[j1] - c.limits.safe_upper[j1]) < 0.01,
-             f'jog to 999 deg stops {np.degrees(c.limits.upper[j1] - c.latest[j1]):.2f} deg '
-             'inside the limit', out)
-    c.within_limits('jog to the limit', qs)
-    c.step(p, 'b', 30)
-    c.step(p, 'h', 400.0)
-    c.at_home('jog, then H')
-    out, _ = c.step(p, 't', 30)
-    out, _ = c.step(p, '5', 30)
-    for _ in range(2):
-        c.step(p, '>', 30)  # 20 deg
-    out, qs = c.step(p, '++', 60)
-    c.report('Not moved' in out and 'collision' in out, 'jog joint5 +40 deg from home into '
-             'the floor is refused', out)
-    c.report(len(qs) and np.ptp(qs, axis=0).max() < 0.005, 'refused jog: nothing moved')
-    out, _ = c.step(p, 'p', 120)
-    c.report('DOF demo pose' in out and 'Done' in out, 'P lifts to the DOF demo pose', out)
-    out, _ = c.step(p, 'b', 30)
-    out, _ = c.step(p, '3', 30)  # both arms
-    out, _ = c.step(p, 't', 30)
-    out, _ = c.step(p, '4', 30)
-    c.report('Step: 5 deg' in out, 'a new jog starts with the 5 deg step again', out)
-    out, qs = c.step(p, '-', 60)
-    c.report('Done' in out, 'jog both arms joint4 - completed', out)
-    c.only_moved('jog both joint4', qs, ['arm_a_joint4', 'arm_b_joint4'],
-                 np.radians(5) - 0.01)
-    c.step(p, 'b', 30)
-    c.step(p, '1', 30)
-    c.step(p, 'h', 400.0)
-    c.at_home('after jog')
-
-    # 10. all joints, one after another (then home)
-    if not args.quick:
-        out, qs = c.step(p, 'a', 900.0)
-        c.report('All joints done' in out and 'Done: at home' in out,
-                 'all joints of the left arm, then home', out)
-        c.within_limits('all joints', qs)
-        c.at_home('after all joints')
+    # 10. the motion library: one motion, the selected arm, parameters, refusals,
+    # a stop mid-motion, and starting away from home
+    library_scenario(c, p)
 
     # 11. quit from a non-home pose: offers home, then shuts everything down
     out, _ = c.step(p, 'd', 30)
@@ -562,13 +590,12 @@ def main():
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--run-sh', type=Path, default=None,
                         help='run.sh to test (default: the installed one)')
-    parser.add_argument('--quick', action='store_true', help='skip the all-joints series')
     parser.add_argument('--only', choices=['menu', 'live'],
                         help='run only the menu scenarios or only live control')
     args = parser.parse_args()
     if args.run_sh is None:
         from ament_index_python.packages import get_package_share_directory
-        args.run_sh = Path(get_package_share_directory('garage_motion_player')) / 'run.sh'
+        args.run_sh = Path(get_package_share_directory('arm_motion_player')) / 'run.sh'
     config = load_config(args.run_sh.parent / 'config' / 'player.yaml', Path.cwd())
     domain = config.ros_domain_id
     sm.apply_environment(sm.ros_environment(domain, config.gz_partition))

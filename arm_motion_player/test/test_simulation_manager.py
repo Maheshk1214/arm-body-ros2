@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-from garage_motion_player import simulation_manager as sm
+from arm_motion_player import simulation_manager as sm
 import pytest
 
 

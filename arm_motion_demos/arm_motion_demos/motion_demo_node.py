@@ -1,10 +1,12 @@
 r"""
-Run a sequence of gestures (wave, dual_arm, dance67) on the arm controllers.
+Run a sequence of motions from the YAML library on the arm controllers.
 
     ros2 run arm_motion_demos motion_demo --ros-args \\
         -p sequence:="[wave, dual_arm, dance67]" -p speed:=1.0
 
-Before anything moves, every gesture is built from the SRDF home and checked
+The motions are the *.yaml files in this package's motions/ folder (and in
+the folders of the motion_folders parameter). Before anything moves, every
+motion is built from the SRDF home and checked
 against the URDF position/velocity limits and MoveIt's acceleration limits
 (motions.validate), then for collisions with MoveIt's /check_state_validity
 (the planning scene includes Gazebo's floor). While a gesture runs,
@@ -14,8 +16,10 @@ limit, lost /joint_states or Ctrl-C, all controllers are told to hold position.
 Exit codes: 0 done, 1 failed while moving, 2 refused before moving,
 130 interrupted.
 """
+from pathlib import Path
 import sys
 
+from arm_motion_demos import motion_library as ml
 from arm_motion_demos import motions as m
 from arm_motion_demos.executor import (Aborted, HOME_TOLERANCE, load_robot,
                                        RobotExecutor)
@@ -37,6 +41,7 @@ class MotionDemo(Node):
         self.declare_parameter('collision_check', True)
         self.declare_parameter('dry_run', False)
         self.declare_parameter('tracking_tolerance', 0.2)  # rad, plan vs /joint_states
+        self.declare_parameter('motion_folders', [''])     # extra folders of *.yaml motions
         self.robot = None  # RobotExecutor, created once the limits are loaded
 
     def param(self, name):
@@ -47,15 +52,22 @@ class MotionDemo(Node):
             self.robot.hold(reason)
 
     def run(self):
-        params = {k: self.param(k) for k in ('speed', 'wave_arm', 'dance_tempo',
-                                             'dance_amplitude')}
-        if self.param('repetitions'):
-            params['repetitions'] = self.param('repetitions')
+        # the original parameter names, mapped onto the motions' own parameters
+        values = {'wave': {'arm': self.param('wave_arm')},
+                  'dance67': {'tempo': self.param('dance_tempo'),
+                              'amplitude': self.param('dance_amplitude')}}
+        common = {'repetitions': self.param('repetitions')} if self.param('repetitions') else {}
         names = list(self.param('sequence'))
+        folders = [ml.builtin_folder()] + [Path(f) for f in self.param('motion_folders') if f]
         try:
             limits, home = load_robot()
             self.robot = RobotExecutor(self, limits)
-            sequence = m.build_sequence(names, home, limits, params)
+            library, problems = ml.load_library(folders)
+            for problem in problems:
+                self.get_logger().warn(f'Motion file skipped: {problem}')
+            values = {k: v for k, v in values.items() if k in names}
+            sequence = ml.build_sequence(library, names, home, limits, values,
+                                         self.param('speed'), common)
         except m.MotionError as e:
             self.get_logger().error(f'Refusing to move: {e}')
             return 2

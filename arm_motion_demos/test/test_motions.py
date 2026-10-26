@@ -2,7 +2,9 @@
 import math
 
 from arm_motion_demos import geometry
+from arm_motion_demos import motion_library as ml
 from arm_motion_demos import motions as m
+import legacy_gestures
 import numpy as np
 import pytest
 
@@ -30,13 +32,24 @@ def home():
 
 
 @pytest.fixture(scope='module')
-def gestures(home, limits):
+def library():
+    lib, problems = ml.load_library([ml.builtin_folder()])
+    assert problems == []
+    return lib
+
+
+@pytest.fixture(scope='module')
+def gestures(library, home, limits):
     return {
-        'wave_a': m.build_gesture('wave', home, limits, {'wave_arm': 'arm_a'}),
-        'wave_b': m.build_gesture('wave', home, limits, {'wave_arm': 'arm_b'}),
-        'dual_arm': m.build_gesture('dual_arm', home, limits, {}),
-        'dance67': m.build_gesture('dance67', home, limits, {}),
+        'wave_a': library['wave'].build(home, limits, {'arm': 'arm_a'}),
+        'wave_b': library['wave'].build(home, limits, {'arm': 'arm_b'}),
+        'dual_arm': library['dual_arm'].build(home, limits),
+        'dance67': library['dance67'].build(home, limits),
     }
+
+
+def dance(library, home, limits, **values):
+    return library['dance67'].build(home, limits, values)
 
 
 def joint(motion, name):
@@ -118,10 +131,11 @@ def test_wave_moves_one_arm_only(gestures, home, arm, other):
     assert joint(motion, f'arm_{arm}_joint1').max() > 1.0  # arm swung out to the side
 
 
-def test_wave_repetitions_and_speed(home, limits):
-    base = m.wave(home, limits, repetitions=2)
-    more = m.wave(home, limits, repetitions=4)
-    faster = m.wave(home, limits, repetitions=2, speed=1.1)
+def test_wave_repetitions_and_speed(library, home, limits):
+    wave = library['wave']
+    base = wave.build(home, limits, {'repetitions': 2})
+    more = wave.build(home, limits, {'repetitions': 4})
+    faster = wave.build(home, limits, {'repetitions': 2}, speed=1.1)
     sway = phase_samples(more, 'arm_a: wave')
     j3 = joint(more, 'arm_a_joint3')[sway]
     peaks = np.sum((j3[1:-1] > j3[:-2]) & (j3[1:-1] >= j3[2:]))
@@ -149,9 +163,9 @@ def test_dual_arm_simultaneous_alternating_symmetric(gestures):
 
 
 # --- 67 dance --------------------------------------------------------------------
-def test_dance_alternates_hands_at_the_tempo(home, limits):
+def test_dance_alternates_hands_at_the_tempo(library, home, limits):
     tempo, reps = 40.0, 4
-    motion = m.dance67(home, limits, repetitions=reps, tempo=tempo)
+    motion = dance(library, home, limits, repetitions=reps, tempo=tempo)
     mask = phase_samples(motion, 'dance: 6-7')
     a, b = joint(motion, 'arm_a_joint3')[mask], joint(motion, 'arm_b_joint3')[mask]
     assert np.corrcoef(a - a.mean(), b - b.mean())[0, 1] < -0.99
@@ -160,70 +174,73 @@ def test_dance_alternates_hands_at_the_tempo(home, limits):
     period = np.diff(peaks)[1:-1].mean() * m.DT  # the ramp cycles shift their peaks
     assert period == pytest.approx(2 * 60.0 / tempo, rel=0.02)
     grippers = motion.q[mask][:, [m.INDEX[g] for g in m.GRIPPERS]]
-    assert grippers == pytest.approx(m.GRIPPER_OPEN)  # palms open while dancing
+    assert grippers == pytest.approx(0.6)  # palms open while dancing
 
 
-def test_dance_amplitude_scales_hand_motion(home, limits):
+def test_dance_amplitude_scales_hand_motion(library, home, limits):
     def swing(amplitude):
-        motion = m.dance67(home, limits, repetitions=2, tempo=30, amplitude=amplitude)
+        motion = dance(library, home, limits, repetitions=2, tempo=30, amplitude=amplitude)
         j3 = joint(motion, 'arm_a_joint3')[phase_samples(motion, 'dance: 6-7')]
         return j3.max() - j3.min()
     assert swing(0.3) == pytest.approx(2 * swing(0.15), rel=0.02)
 
 
-def test_the_largest_dance_amplitude_stays_within_every_limit(home, limits):
-    tempo = m.dance67_max_tempo(0.3, limits) - 0.01
-    assert m.validate(m.dance67(home, limits, tempo=tempo, amplitude=0.3), limits) == []
+def test_the_largest_dance_amplitude_stays_within_every_limit(library, home, limits):
+    tempo = legacy_gestures.dance67_max_tempo(0.3, limits) - 0.01
+    assert m.validate(dance(library, home, limits, tempo=tempo, amplitude=0.3), limits) == []
     with pytest.raises(m.MotionError, match='amplitude'):
-        m.dance67(home, limits, tempo=20, amplitude=0.35)
+        dance(library, home, limits, tempo=20, amplitude=0.35)
 
 
-def test_dance_too_fast_is_refused_with_the_limit(home, limits):
-    max_tempo = m.dance67_max_tempo(0.25, limits)
-    assert m.validate(m.dance67(home, limits, tempo=max_tempo - 1), limits) == []
-    with pytest.raises(m.MotionError, match=f'max {max_tempo:.0f} bpm'):
-        m.dance67(home, limits, tempo=max_tempo + 5)
+def test_dance_too_fast_is_refused_with_the_limit(library, home, limits):
+    """The YAML's max_acceleration gives the same tempo limit as the old Python check."""
+    max_tempo = legacy_gestures.dance67_max_tempo(0.25, limits)
+    assert m.validate(dance(library, home, limits, tempo=max_tempo - 0.01), limits) == []
+    with pytest.raises(m.MotionError, match='too fast.*85% allowed.*lower the tempo'):
+        dance(library, home, limits, tempo=max_tempo + 0.01)
 
 
 # --- sequences -------------------------------------------------------------------
-def test_sequence_order_and_home_entries(home, limits):
-    seq = m.build_sequence(['home', 'dance67', 'wave', 'home', 'dual_arm', 'home'],
-                           home, limits, {'repetitions': 1})
+def test_sequence_order_and_home_entries(library, home, limits):
+    seq = ml.build_sequence(library, ['home', 'dance67', 'wave', 'home', 'dual_arm', 'home'],
+                            home, limits, common={'repetitions': 1})
     assert [n for n, _ in seq] == ['dance67', 'wave', 'dual_arm']
     for _, motion in seq:  # every gesture hands over at home
         assert motion.q[0] == pytest.approx(home) and motion.q[-1] == pytest.approx(home)
 
 
-def test_sequence_speed_changes_durations(home, limits):
-    slow = m.build_sequence(['dual_arm'], home, limits, {'speed': 0.5})[0][1]
-    normal = m.build_sequence(['dual_arm'], home, limits, {'speed': 1.0})[0][1]
+def test_sequence_speed_changes_durations(library, home, limits):
+    slow = ml.build_sequence(library, ['dual_arm'], home, limits, speed=0.5)[0][1]
+    normal = ml.build_sequence(library, ['dual_arm'], home, limits, speed=1.0)[0][1]
     assert slow.duration > 1.8 * normal.duration
 
 
-def test_sequence_refuses_motion_over_the_limits(home, limits):
+def test_sequence_refuses_motion_over_the_limits(library, home, limits):
     with pytest.raises(m.MotionError, match='acceleration limit'):
-        m.build_sequence(['wave'], home, limits, {'speed': 2.5})
+        ml.build_sequence(library, ['wave'], home, limits, speed=2.5)
 
 
 # --- invalid parameters ----------------------------------------------------------
-@pytest.mark.parametrize('names,params,match', [
-    ([], {}, 'empty'),
-    (['moonwalk'], {}, 'unknown gesture'),
-    (['wave'], {'repetitions': -1}, 'repetitions'),
-    (['wave'], {'repetitions': 2.5}, 'repetitions'),
-    (['wave'], {'repetitions': 100}, 'repetitions'),
-    (['dual_arm'], {'repetitions': True}, 'repetitions'),
-    (['wave'], {'speed': 0.0}, 'speed'),
-    (['wave'], {'speed': math.nan}, 'speed'),
-    (['wave'], {'speed': 'fast'}, 'speed'),
-    (['wave'], {'wave_arm': 'arm_c'}, 'wave arm'),
-    (['dance67'], {'dance_amplitude': 0.9}, 'amplitude'),
-    (['dance67'], {'dance_tempo': -10}, 'tempo'),
-    (['dance67'], {'dance_tempo': 300}, 'tempo'),
+@pytest.mark.parametrize('names,values,speed,match', [
+    ([], {}, 1.0, 'empty'),
+    (['moonwalk'], {}, 1.0, 'unknown motion'),
+    (['wave'], {'repetitions': -1}, 1.0, 'repetitions'),
+    (['wave'], {'repetitions': 2.5}, 1.0, 'repetitions'),
+    (['wave'], {'repetitions': 100}, 1.0, 'repetitions'),
+    (['wave'], {'repetitions': 'many'}, 1.0, 'repetitions'),
+    (['dual_arm'], {'repetitions': True}, 1.0, 'repetitions'),
+    (['wave'], {}, 0.0, 'speed'),
+    (['wave'], {}, math.nan, 'speed'),
+    (['wave'], {}, 'fast', 'speed'),
+    (['wave'], {'arm': 'arm_c'}, 1.0, 'wave arm'),
+    (['wave'], {'tempo': 40}, 1.0, 'no parameter tempo'),
+    (['dance67'], {'amplitude': 0.9}, 1.0, 'amplitude'),
+    (['dance67'], {'tempo': -10}, 1.0, 'tempo'),
+    (['dance67'], {'tempo': 300}, 1.0, 'tempo'),
 ])
-def test_invalid_parameters_are_refused(home, limits, names, params, match):
+def test_invalid_parameters_are_refused(library, home, limits, names, values, speed, match):
     with pytest.raises(m.MotionError, match=match):
-        m.build_sequence(names, home, limits, params)
+        ml.build_sequence(library, names, home, limits, {n: values for n in names}, speed)
 
 
 # --- validator -------------------------------------------------------------------

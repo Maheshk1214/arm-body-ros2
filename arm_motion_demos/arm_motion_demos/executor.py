@@ -1,7 +1,7 @@
 """
 Execute validated motions on the arm and gripper trajectory controllers.
 
-Shared by motion_demo and the garage motion player. A RobotExecutor attaches
+Shared by motion_demo and the arm motion player. A RobotExecutor attaches
 to any rclpy node: it follows /joint_states, publishes a Motion to the four
 JointTrajectoryControllers (one trajectory each, started at the same stamp),
 and compares /joint_states with the plan while it runs. If a joint leaves the

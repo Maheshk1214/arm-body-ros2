@@ -13,8 +13,8 @@ from typing import Callable, Dict, List, Optional, Sequence
 
 from arm_motion_demos import motions as m
 from arm_motion_demos.executor import CONTROLLERS, load_robot, RobotExecutor, Stopped
-from garage_motion_player import dof_motions
-from garage_motion_player.live_jog import LiveJogger, stream_points
+from arm_motion_player import dof_motions
+from arm_motion_player.live_jog import LiveJogger, stream_points
 from moveit_msgs.action import MoveGroup
 from moveit_msgs.msg import (Constraints, JointConstraint, MoveItErrorCodes,
                              PlanningSceneComponents)
@@ -140,6 +140,15 @@ class Robot:
         finally:
             self.busy = False
 
+    def check_motion(self, name: str, motion: m.Motion) -> None:
+        """Limits and MoveIt collision check of a whole motion; raises MotionError."""
+        problems = m.validate(motion, self.limits)
+        if problems:
+            raise m.MotionError(f'{name} breaks the joint limits: ' + '; '.join(problems))
+        problem = self.ex.check_collisions(name, motion)
+        if problem:
+            raise m.MotionError(problem)
+
     def dof(self, joints: Sequence[str], amplitude: float, speed: float,
             should_stop=None, on_sample=None) -> List[str]:
         """
@@ -163,20 +172,6 @@ class Robot:
         motion = dof_motions.combine(start, safe, self.limits, speed, name)
         self.play(name, motion, collision_check=False,  # each side was checked above
                   should_stop=should_stop, on_sample=on_sample)
-        return notes
-
-    def jog(self, joints: Sequence[str], speed: float, delta=None, goal=None,
-            should_stop=None, on_sample=None) -> List[str]:
-        """
-        Move only `joints` by `delta` rad or to `goal` rad (the user's jog step).
-
-        Same checks as every motion (limits, collision, still, start match);
-        returns notes about joints stopped at their safe limit.
-        """
-        start = self.planning_start()
-        target, notes = dof_motions.jog_target(start, joints, self.limits, delta, goal)
-        motion = dof_motions.jog_motion(start, target, self.limits, speed)
-        self.play('+'.join(joints), motion, should_stop=should_stop, on_sample=on_sample)
         return notes
 
     def goto(self, name: str, target, speed: float, should_stop=None, on_sample=None) -> None:

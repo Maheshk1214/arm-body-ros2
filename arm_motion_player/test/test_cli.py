@@ -1,11 +1,12 @@
 """Menu behaviour, driven with scripted input and a fake robot (no ROS)."""
 from pathlib import Path
 
+from arm_motion_demos import motion_library as ml
 from arm_motion_demos import motions as m
 from arm_motion_demos.executor import Aborted, Stopped
-from garage_motion_player import live_jog
-from garage_motion_player.cli import App, HangUp, StdinStopper, Terminal
-from garage_motion_player.config import load_config
+from arm_motion_player import live_jog
+from arm_motion_player.cli import App, HangUp, StdinStopper, Terminal
+from arm_motion_player.config import load_config
 import numpy as np
 import pytest
 
@@ -17,7 +18,9 @@ class FakeRobot:
 
     def __init__(self, home=True, fail=None):
         self.home = np.zeros(len(m.JOINTS))
-        self.limits = m.Limits(np.full(14, -3.0), np.full(14, 3.0), np.ones(14), np.ones(14))
+        # velocity / acceleration as on the robot (the motion checks use them)
+        self.limits = m.Limits(np.full(14, -3.0), np.full(14, 3.0), np.full(14, 2.0),
+                               np.full(14, 3.0))
         self._home = home
         self._dof_pose = False
         self.fail = fail or {}
@@ -41,15 +44,6 @@ class FakeRobot:
             raise Stopped(f'{joints[0]}: {should_stop()}')
         return []
 
-    def jog(self, joints, speed, delta=None, goal=None, should_stop=None, on_sample=None):
-        self.calls.append(('jog', tuple(joints), None if delta is None else round(delta, 6),
-                           goal, speed))
-        for j in joints:
-            if j in self.fail:
-                raise self.fail[j]
-        self._home = False
-        return []
-
     def state(self):
         return (0.0, self.positions())
 
@@ -71,6 +65,18 @@ class FakeRobot:
 
     def stop(self, reason):
         self.calls.append(('stop', reason))
+
+    def check_motion(self, name, motion):
+        self.calls.append(('check', name))
+        if ('check', name) in self.fail:
+            raise self.fail[('check', name)]
+
+    def play(self, name, motion, collision_check=True, should_stop=None, on_sample=None):
+        self.calls.append(('play', name, motion))
+        if ('play', name) in self.fail:
+            raise self.fail[('play', name)]
+        self._home = True
+        return 0.012
 
 
 @pytest.fixture
@@ -103,7 +109,10 @@ class FakeTerminal:
         self.lines.append(text)
 
 
-def run(config, robot, keys, should_stop=lambda: None, terminal=None):
+LIBRARY = ml.load_library([ml.builtin_folder()])[0]
+
+
+def run(config, robot, keys, should_stop=lambda: None, terminal=None, library=LIBRARY):
     inputs, lines = iter(keys), []
 
     def ask(prompt):
@@ -113,7 +122,7 @@ def run(config, robot, keys, should_stop=lambda: None, terminal=None):
         except StopIteration:
             raise EOFError
     App(robot, config, ask=ask, out=lines.append, should_stop=should_stop,
-        terminal=terminal).run()
+        terminal=terminal, library=library).run()
     return '\n'.join(lines)
 
 
@@ -123,7 +132,7 @@ def calls(robot, kind):
 
 def test_menu_shows_robot_speed_and_pose(config):
     text = run(config, FakeRobot(), ['q'])
-    assert 'GIP GARAGE MOTION PLAYER' in text
+    assert 'MORETEA ARM MOTION PLAYER' in text
     assert 'Robot: Left arm (arm_a)' in text and 'Speed: 0.50' in text and 'at home' in text
 
 
@@ -160,34 +169,17 @@ def test_speed_is_validated(config):
     assert calls(robot, 'dof')[0][3] == 0.3
 
 
-def test_all_joints_run_in_order_then_home(config):
-    robot = FakeRobot()
-    text = run(config, robot, ['a', 'q'])
-    assert [c[1][0] for c in calls(robot, 'dof')] == [
-        f'arm_a_{s}' for s in ('joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6',
-                               'gripper_joint')]
-    assert calls(robot, 'home') and 'All joints done' in text
-
-
-def test_all_joints_start_from_the_dof_pose_from_anywhere(config):
-    robot = FakeRobot(home=False)  # e.g. stopped mid-motion
-    run(config, robot, ['a', 'q'])
-    assert robot.calls[0] == ('goto', 'DOF demo pose')
-
-
 def test_single_joint_from_the_dof_pose_needs_no_lift(config):
     robot = FakeRobot()
     run(config, robot, ['d', '1', 'd', '2', 'q', 'y'])
     assert calls(robot, 'goto') == [('goto', 'DOF demo pose')]  # only before the first
 
 
-def test_all_joints_stop_at_the_first_failure(config):
-    robot = FakeRobot(fail={'arm_a_joint3': Aborted('arm_a_joint3: deviated 0.3 rad')})
-    text = run(config, robot, ['a', 'q', 'n'])
-    assert [c[1][0] for c in calls(robot, 'dof')] == ['arm_a_joint1', 'arm_a_joint2',
-                                                      'arm_a_joint3']
-    assert 'Motion failed and was stopped' in text and 'Stopping the series here' in text
-    assert not calls(robot, 'home')  # not sent home blindly after a failure
+def test_failed_motion_is_reported_and_not_sent_home(config):
+    robot = FakeRobot(home=False, fail={'arm_a_joint3': Aborted('arm_a_joint3: deviated 0.3 rad')})
+    text = run(config, robot, ['d', '3', 'q', 'n'])
+    assert 'Motion failed and was stopped: arm_a_joint3: deviated 0.3 rad' in text
+    assert 'Press H' in text and not calls(robot, 'home')
 
 
 def test_refused_motion_is_reported_and_menu_continues(config):
@@ -234,64 +226,6 @@ def test_stdin_stopper_reads_s(monkeypatch, tmp_path):
         monkeypatch.setattr('sys.stdin', f)
         assert StdinStopper()() == expected
         f.close()
-
-
-def deg(x):
-    return round(np.radians(x), 6)
-
-
-def test_jog_steps_the_selected_joint(config):
-    robot = FakeRobot(home=False)
-    text = run(config, robot, ['2', 't', '3', '+', '-', '+++', 'b', 'q', 'n'])
-    assert 'JOG  Right arm: joint3' in text and 'Step: 5 deg' in text
-    assert [(c[1], c[2]) for c in calls(robot, 'jog')] == [
-        (('arm_b_joint3',), deg(5)), (('arm_b_joint3',), deg(-5)), (('arm_b_joint3',), deg(15))]
-
-
-def test_jog_step_size_and_angle(config):
-    robot = FakeRobot(home=False)
-    run(config, robot, ['3', 't', '1', '>', '>', '>', '-', '<', '<', '<', '<', '<', '+',
-                        'g', '30', 'g', 'abc', 'b', 'q', 'n'])
-    jogs = calls(robot, 'jog')
-    both = ('arm_a_joint1', 'arm_b_joint1')
-    assert [c[1:4] for c in jogs] == [(both, deg(-20), None), (both, deg(1), None),
-                                      (both, None, np.radians(30))]
-
-
-def test_jog_from_home_warns_and_p_lifts(config):
-    robot = FakeRobot()
-    text = run(config, robot, ['t', '2', 'p', '+', 'b', 'q', 'n'])
-    assert 'steps that would hit it are refused' in text
-    assert robot.calls[0] == ('goto', 'DOF demo pose') and calls(robot, 'jog')
-
-
-def test_jog_refusal_is_reported_and_jog_continues(config):
-    robot = FakeRobot(home=False, fail={'arm_a_joint5': m.MotionError('collision at t=0.2 s')})
-    text = run(config, robot, ['t', '5', '+', 'x', 'b', 'q', 'n'])
-    assert 'Not moved: collision at t=0.2 s' in text and '"x" is not a jog key' in text
-    assert text.count('JOG  Left arm: joint5') == 3  # shown again after each key
-
-
-def test_ctrl_c_at_the_jog_prompt_goes_back_to_the_menu(config):
-    robot = FakeRobot(home=False)
-    keys = iter(['t', '1'])
-
-    def ask(prompt):
-        if prompt == 'Jog: ':
-            raise KeyboardInterrupt
-        try:
-            return next(keys)
-        except StopIteration:
-            raise EOFError
-    lines = []
-    App(robot, config, ask=ask, out=lines.append, should_stop=lambda: None).run()
-    assert sum('GIP GARAGE MOTION PLAYER' in t for t in lines) == 2 and not calls(robot, 'jog')
-
-
-def test_jog_back_from_the_joint_list(config):
-    robot = FakeRobot(home=False)
-    run(config, robot, ['t', 'b', 'q', 'n'])
-    assert not calls(robot, 'jog')
 
 
 def test_end_of_input_away_from_home_quits_without_moving(config):
@@ -385,3 +319,71 @@ def test_hang_up_at_the_menu_ends_without_the_home_question(config):
     with pytest.raises(HangUp):
         App(robot, config, ask=ask, out=lambda t: None).run()
     assert asked == ['Choose: ']
+
+
+# --- motion library (M) ----------------------------------------------
+def played(robot):
+    return [c[1] for c in robot.calls if c[0] == 'play']
+
+
+def test_menu_lists_the_library_and_no_removed_actions(config):
+    text = run(config, FakeRobot(), ['q'])
+    assert '[M] Play a motion: dance67, dual_arm, wave' in text
+    assert '[A]' not in text and '[T]' not in text and '[C]' not in text
+
+
+def test_play_a_motion_with_defaults(config):
+    robot = FakeRobot()
+    text = run(config, robot, ['m', '1', '', 'q'])
+    assert '[1] 67 dance' in text and 'All checks passed' in text
+    assert calls(robot, 'check') == [('check', 'dance67')] and played(robot) == ['dance67']
+    assert '> 67 dance (repetitions=6 tempo=54.0 amplitude=0.25)' in text
+    assert 'Done: back at home, at most 0.012 rad from the plan' in text
+
+
+def test_parameters_and_speed_reach_the_motion(config):
+    robot = FakeRobot()
+    run(config, robot, ['v', '0.3', 'm', 'dance67', 'repetitions=2 tempo=40', 'q'])
+    (_, _, motion), = calls(robot, 'play')
+    expected = LIBRARY['dance67'].build(robot.home, robot.limits,
+                                        {'repetitions': 2, 'tempo': 40.0}, 0.3)
+    assert np.array_equal(motion.q, expected.q)
+
+
+def test_the_selected_arm_waves(config):
+    robot = FakeRobot()
+    run(config, robot, ['2', 'm', '3', '', 'q'])
+    (_, _, motion), = calls(robot, 'play')
+    moved = np.ptp(motion.q, axis=0)
+    assert moved[m.INDEX['arm_b_joint1']] > 1.0 and moved[m.INDEX['arm_a_joint1']] == 0.0
+
+
+def test_not_at_home_goes_home_first(config):
+    robot = FakeRobot(home=False)
+    run(config, robot, ['m', '2', '', 'q'])
+    kinds = [c[0] for c in robot.calls]
+    assert kinds == ['check', 'home', 'play']  # checked before anything moves
+
+
+def test_bad_parameters_or_choice_play_nothing(config):
+    robot = FakeRobot()
+    text = run(config, robot, ['m', '1', 'tempo=500', 'm', '9', 'm', 'b', 'q'])
+    assert 'Not played: dance67 tempo' in text and '"9" is not in the list' in text
+    assert not played(robot) and not calls(robot, 'check')
+
+
+def test_a_refused_check_plays_nothing(config):
+    robot = FakeRobot(fail={('check', 'wave'): m.MotionError('wave: collision at t=1.20 s')})
+    text = run(config, robot, ['m', 'wave', '', 'q'])
+    assert 'Not played: wave: collision at t=1.20 s' in text and not played(robot)
+
+
+def test_empty_library_says_so(config):
+    text = run(config, FakeRobot(), ['m', 'q'], library={})
+    assert '(none found)' in text and 'No motions found' in text
+
+
+def test_removed_keys_are_not_options(config):
+    robot = FakeRobot()
+    text = run(config, robot, ['a', 't', 'c', 'q'])
+    assert all(f'"{k}" is not an option' in text for k in 'atc') and robot.calls == []

@@ -139,7 +139,7 @@ class Checker(Node):
     def invalid(self):
         for params, text in (({'dance_tempo': '200.0', 'sequence': '[dance67]'}, 'tempo'),
                              ({'repetitions': '-1'}, 'repetitions'),
-                             ({'sequence': '[moonwalk]'}, 'unknown gesture'),
+                             ({'sequence': '[moonwalk]'}, 'unknown motion'),
                              ({'speed': '2.5', 'sequence': '[wave]'}, 'limit')):
             code, q, out = self.run_demo(params, timeout=60)
             self.report(code == 2 and text in out,

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>garage_motion_player</name>
+  <name>arm_motion_player</name>
   <version>0.1.0</version>
-  <description>Menu-driven motion player for the GIP Garage dual-arm robot in Gazebo</description>
+  <description>Menu-driven motion player for the moretea dual-arm robot in Gazebo</description>
   <maintainer email="eileenteoh10399@gmail.com">eileen</maintainer>
   <license>TODO: License declaration</license>
 

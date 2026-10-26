@@ -9,6 +9,8 @@ Gesture demonstrations for the dual-arm robot, in simulation (MoveIt mock demo o
 | `dance67` | "6-7": forearms forward, palms (grippers) open, hands bobbing up and down in turn; the wrists counter-rotate so the palms stay level |
 
 Every gesture starts and ends at the SRDF `home` pose, so gestures can be chained in any order.
+The gestures are YAML files in [`motions/`](motions) (the motion library, see
+[Adding a motion](#adding-a-motion)); `motion_demo` and the arm motion player both read them.
 The original `arm_motion_node` (home → raised → home over the trajectory topics) is unchanged.
 
 ## Run
@@ -48,6 +50,7 @@ controllers. motion_demo notices (the arms leave its plan) and stops, but avoid 
 | `collision_check` | `true` | Check every state with MoveIt's `/check_state_validity` before moving |
 | `dry_run` | `false` | Build and check everything, don't move |
 | `tracking_tolerance` | `0.2` | Stop if a joint is further than this (rad) from the plan |
+| `motion_folders` | `['']` | Extra folders of `*.yaml` motions, besides the package's `motions/` |
 
 Exit codes: `0` done, `1` stopped while moving, `2` refused before moving, `130` Ctrl-C.
 
@@ -114,3 +117,37 @@ Ctrl+Shift+Alt+R, or the screenshot tool's video mode); those play at the simula
 - The collision check uses MoveIt's allowed-collision matrix (sampled, see the SRDF); the
   offline FK test covers floor, body and arm-to-arm distances independently.
 - Topic commands from other tools (e.g. `arm_motion_node`) bypass these checks.
+
+## Adding a motion
+Each `*.yaml` file in `motions/` (or in a `motion_folders` folder) is one motion; its `name`
+is what goes in `sequence`. The format is documented at the top of
+[`motion_library.py`](arm_motion_demos/motion_library.py); `motions/wave.yaml` is the
+simplest example:
+```yaml
+name: wave
+title: Wave
+description: One arm out to the side, forearm up, hand swaying side to side.
+parameters:
+  repetitions: {type: int, default: 3, min: 1, max: 20, help: number of waves}
+  arm: {type: choice, default: arm_a, choices: [arm_a, arm_b], help: which arm waves}
+poses:                      # home plus these joints (rad); joint1..joint6 per arm
+  hand_up:
+    "{arm}": [1.3, -1.57, -1.2, -0.3, 1.57, 0.01]
+    "{arm}_gripper_joint": 0.6
+steps:
+  - move: hand_up
+    label: "{arm}: raise hand"
+  - oscillate:
+      amplitude: {"{arm}": [0.0, 0.0, 0.25, 0.2, 0.25, 0.0]}
+      cycles: repetitions
+    label: "{arm}: wave x{repetitions}"
+  - move: home
+    label: back to home
+```
+Steps are `move` (to a pose), `oscillate` (sway around the current pose), `hold` and
+`repeat`. Numbers can be expressions of the parameters (`2 * 60 / tempo`). A motion must end
+at home and pass every check above; a file that does not is skipped with the reason (and
+`motion_demo` says so). Run `colcon build` after editing the files in `motions/`.
+The YAML files reproduce the earlier Python gestures sample for sample
+(`test/test_motion_library.py` compares them with a frozen copy, `test/legacy_gestures.py`).
+

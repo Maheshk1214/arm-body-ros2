@@ -1,9 +1,10 @@
 """
-Motion primitives and gestures for the dual-arm robot.
+Motion primitives for the dual-arm robot.
 
-Pure Python (numpy, no ROS) so gestures can be built, validated and tested
+Pure Python (numpy, no ROS) so motions can be built, validated and tested
 offline. A motion is a densely sampled joint trajectory (every DT seconds)
-for all 14 joints; gestures start and end at the SRDF home pose.
+for all 14 joints. The gestures themselves (wave, dual_arm, dance67) are YAML
+files built with these primitives by motion_library.
 
 Safety rules applied by validate():
 - positions stay at least LIMIT_MARGIN inside every URDF limit (home sits
@@ -30,8 +31,6 @@ LIMIT_MARGIN = 0.01   # rad, kept from every URDF position limit
 VEL_FRACTION = 0.5
 ACC_FRACTION = 0.5
 OSC_FRACTION = 0.7
-# The dance runs closer to the limit: its validated peak (ramp included) is ~95 %.
-DANCE_OSC_FRACTION = 0.85
 
 
 class MotionError(ValueError):
@@ -206,9 +205,9 @@ class MotionBuilder:
         if cycles < 1:
             raise MotionError(f'cycles must be >= 1, got {cycles}')
         if period is None:
-            moving = amplitude > 0
+            moving = np.abs(amplitude) > 0
             omega = np.min(np.sqrt(OSC_FRACTION * self.limits.acceleration[moving]
-                                   / amplitude[moving]))
+                                   / np.abs(amplitude[moving])))
             period = 2 * math.pi / omega / self.speed
         cycles += 1  # one extra cycle is spent ramping in and out
         n = int(round(cycles * period / DT)) + 1
@@ -266,159 +265,6 @@ def check_float(name, value, low, high):
     return float(value)
 
 
-# Gesture poses (joint1..joint6). Robot faces +x; arm_a is its left arm.
-# joint1 > 0 swings an arm outward; joint2 -pi/2 = arm forward, horizontal;
-# joint5 = pi/2 lines the gripper up with the last arm segment. arm_b's joint1
-# and joint6 axes are flipped in the URDF, so the same values on arm_b give the
-# mirror-image pose.
-WAVE_POSE = [1.3, -1.57, -1.2, -0.3, 1.57, 0.01]        # arm out to the side, forearm up
-WAVE_SWAY = [0.0, 0.0, 0.25, 0.2, 0.25, 0.0]            # hand sways ~20 cm side to side
-FORWARD = [0.0, -1.57, 0.0, 0.0, 1.57, 0.01]            # arm straight forward
-UP = [0.0, -2.7, 0.0, 0.0, 1.57, 0.01]                  # arm raised high
-T_POSE = [1.3, -1.57, 0.0, 0.0, 1.57, 0.01]             # arm straight out to the side
-DANCE_READY = [0.0, -0.35, -1.22, 0.0, 1.57, 0.01]      # forearm forward, palm level
-GRIPPER_OPEN = 0.6
-
-
-def _arms(home, arm_a, arm_b, grippers=None):
-    return pose(home, arm_a, arm_b, grippers)
-
-
-def wave(home, limits, repetitions=3, speed=1.0, arm='arm_a'):
-    """One arm out to the side with the forearm up, hand swaying side to side."""
-    repetitions = check_int('repetitions', repetitions, 1, 20)
-    if arm not in ('arm_a', 'arm_b'):
-        raise MotionError(f"wave arm must be 'arm_a' or 'arm_b', got {arm!r}")
-    sl = slice(0, 6) if arm == 'arm_a' else slice(6, 12)
-    up = np.array(home, float)
-    up[sl] = WAVE_POSE if arm == 'arm_a' else WAVE_POSE
-    gr = 12 if arm == 'arm_a' else 13
-    up[gr] = GRIPPER_OPEN
-    amp = np.zeros(len(JOINTS))
-    amp[sl] = WAVE_SWAY
-    b = MotionBuilder(home, limits, speed)
-    b.move_to(up, label=f'{arm}: raise hand')
-    b.oscillate(amp, repetitions, label=f'{arm}: wave x{repetitions}')
-    b.move_to(home, label='back to home')
-    return b.build('wave')
-
-
-def dual_arm(home, limits, repetitions=2, speed=1.0):
-    """Both arms: raise together, alternate, then symmetric side flaps."""
-    repetitions = check_int('repetitions', repetitions, 1, 20)
-    forward = _arms(home, FORWARD, FORWARD)
-    up = _arms(home, UP, UP)
-    tpose = _arms(home, T_POSE, T_POSE)
-    b = MotionBuilder(home, limits, speed)
-    b.move_to(forward, label='both arms forward')
-    for i in range(repetitions):
-        b.move_to(up, label=f'simultaneous raise {i + 1}/{repetitions}')
-        b.move_to(forward)
-    alt = np.zeros(len(JOINTS))
-    alt[[INDEX['arm_a_joint2'], INDEX['arm_b_joint2']]] = 0.5
-    phase = np.zeros(len(JOINTS))
-    phase[INDEX['arm_b_joint2']] = math.pi
-    b.oscillate(alt, repetitions, phase=phase,
-                label=f'alternating arms x{repetitions}')
-    b.move_to(tpose, label='arms out to the sides')
-    flap = np.zeros(len(JOINTS))
-    flap[[INDEX['arm_a_joint2'], INDEX['arm_b_joint2']]] = 0.4
-    b.oscillate(flap, repetitions, label=f'symmetric flaps x{repetitions}')
-    b.move_to(home, label='back to home')
-    return b.build('dual_arm')
-
-
-def dance67_max_tempo(amplitude, limits):
-    """Fastest tempo (beats/min) whose oscillation stays within DANCE_OSC_FRACTION."""
-    amp = _dance_amplitudes(amplitude)
-    moving = amp > 0
-    omega = np.min(np.sqrt(DANCE_OSC_FRACTION * limits.acceleration[moving] / amp[moving]))
-    return 2 * 60 * omega / (2 * math.pi)  # two beats ("6", "7") per cycle
-
-
-def _dance_amplitudes(amplitude):
-    """Per joint: forearm tilt = amplitude, small upper-arm bob, palm kept level."""
-    amp = np.zeros(len(JOINTS))
-    for prefix in ('arm_a', 'arm_b'):
-        amp[INDEX[f'{prefix}_joint2']] = 0.4 * amplitude
-        amp[INDEX[f'{prefix}_joint3']] = amplitude
-        amp[INDEX[f'{prefix}_joint5']] = 1.2 * amplitude
-    return amp
-
-
-def dance67(home, limits, repetitions=6, tempo=54.0, amplitude=0.25, speed=1.0):
-    """
-    "6-7": forearms forward, palms up, hands bobbing up and down in turn.
-
-    One cycle is two beats ("6" = left hand up, "7" = right hand up). The
-    upper arm bobs with the forearm and the wrist counter-rotates, so the
-    palms stay roughly level like weighing scales.
-    """
-    repetitions = check_int('repetitions', repetitions, 1, 50)
-    # Above 0.3 rad the forearm (joint3) reaches its safe lower limit at any tempo.
-    amplitude = check_float('dance amplitude', amplitude, 0.05, 0.3)
-    max_tempo = dance67_max_tempo(amplitude, limits)
-    tempo = check_float('dance tempo', tempo, 10.0, 200.0)
-    if tempo > max_tempo:
-        raise MotionError(
-            f'dance tempo {tempo:.0f} bpm is too fast for amplitude {amplitude} '
-            f'rad: max {max_tempo:.0f} bpm within the acceleration limits')
-    ready = _arms(home, DANCE_READY, DANCE_READY,
-                  [GRIPPER_OPEN, GRIPPER_OPEN])
-    amp = _dance_amplitudes(amplitude)
-    sign = np.ones(len(JOINTS))
-    # "up" = forearm tilts up (joint2/joint3 more negative), wrist compensates
-    for prefix in ('arm_a', 'arm_b'):
-        sign[INDEX[f'{prefix}_joint2']] = sign[INDEX[f'{prefix}_joint3']] = -1
-    phase = np.zeros(len(JOINTS))
-    for j in ARM_B:
-        phase[INDEX[j]] = math.pi
-    b = MotionBuilder(home, limits, speed)
-    b.move_to(ready, label='dance: ready, palms up')
-    b.oscillate(sign * amp, repetitions, period=2 * 60.0 / tempo, phase=phase,
-                label=f'dance: 6-7 x{repetitions} at {tempo:.0f} bpm')
-    b.move_to(home, label='back to home')
-    return b.build('dance67')
-
-
 def home_motion(start, home, limits, speed=1.0):
     """Bring the robot from `start` to home."""
     return MotionBuilder(start, limits, speed).move_to(home, label='home').build('home')
-
-
-GESTURES = ('wave', 'dual_arm', 'dance67')
-
-
-def build_gesture(name, home, limits, params):
-    """Build one gesture; params: speed, repetitions, wave_arm, dance_tempo, dance_amplitude."""
-    speed = check_float('speed', params.get('speed', 1.0), 0.1, 3.0)
-    reps = params.get('repetitions')
-    if name == 'wave':
-        return wave(home, limits, reps or 3, speed, params.get('wave_arm', 'arm_a'))
-    if name == 'dual_arm':
-        return dual_arm(home, limits, reps or 2, speed)
-    if name == 'dance67':
-        return dance67(home, limits, reps or 6, params.get('dance_tempo', 54.0),
-                       params.get('dance_amplitude', 0.25), speed)
-    raise MotionError(f'unknown gesture {name!r}; choose from {", ".join(GESTURES)} or home')
-
-
-def build_sequence(names, home, limits, params):
-    """
-    Build and validate a sequence of gestures, as [(name, Motion)].
-
-    'home' entries are skipped (every gesture starts and ends at home). Every
-    motion is validated before anything runs.
-    """
-    if not names:
-        raise MotionError('sequence is empty')
-    motions = []
-    for name in names:
-        if name == 'home':
-            continue
-        motion = build_gesture(name, home, limits, params)
-        problems = validate(motion, limits)
-        if problems:
-            raise MotionError(f'{name} breaks the limits:\n  ' + '\n  '.join(problems))
-        motions.append((name, motion))
-    return motions

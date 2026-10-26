@@ -1,3 +1,5 @@
+from glob import glob
+
 from setuptools import find_packages, setup
 
 package_name = 'arm_motion_demos'
@@ -11,6 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml', 'README.md']),
         ('share/' + package_name + '/worlds', ['worlds/demo_recording.sdf']),
+        ('share/' + package_name + '/motions', glob('motions/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

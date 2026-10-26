@@ -1,5 +1,5 @@
 """
-GIP Garage Motion Player: terminal menu.
+Moretea Arm Motion Player: terminal menu.
 
 Started by run.sh. main() sets up the ROS environment, launches (or attaches
 to) the simulation, waits until it is ready and runs the menu. App holds the
@@ -18,33 +18,33 @@ import signal
 import sys
 import termios
 import tty
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
+from arm_motion_demos import motion_library as ml
 from arm_motion_demos import motions as m
 from arm_motion_demos.executor import Aborted, Stopped
-from garage_motion_player import live_jog
-from garage_motion_player.config import Config, ConfigError, load_config
+from arm_motion_player import live_jog
+from arm_motion_player import motion_menu as mm
+from arm_motion_player.config import Config, ConfigError, load_config
 import numpy as np
 
 ARM_CHOICES = {'1': 'left', '2': 'right', '3': 'both'}
 ARM_NAMES = {'left': 'Left arm', 'right': 'Right arm', 'both': 'Both arms'}
-JOG_STEPS = (1.0, 2.0, 5.0, 10.0, 20.0)  # deg, chosen with < and >
-JOG_DEFAULT_STEP = 2                     # index into JOG_STEPS (5 deg)
 LINE = '=' * 46
 
 
-def render_main(arm: str, speed: float, pose: str, config: Config) -> str:
+def render_main(arm: str, speed: float, pose: str, config: Config,
+                motions: Sequence[str] = ()) -> str:
     prefixes = {'left': config.arms['left'], 'right': config.arms['right'],
                 'both': f'{config.arms["left"]} + {config.arms["right"]}'}
     return '\n'.join([
-        '', LINE, '          GIP GARAGE MOTION PLAYER', LINE,
+        '', LINE, '          MORETEA ARM MOTION PLAYER', LINE,
         f' Robot: {ARM_NAMES[arm]} ({prefixes[arm]})   Speed: {speed:.2f}   Pose: {pose}',
         '-' * 46,
         ' SELECT ROBOT   [1] Left arm  [2] Right arm  [3] Both arms',
         ' ACTIONS        [D] Move one joint (DOF)',
-        '                [A] Move all joints, one after another',
         '                [J] Live control: hold keys to move joints',
-        '                [T] Jog one joint by steps (type + Enter)',
+        f' MOTIONS        [M] Play a motion: {", ".join(motions) or "(none found)"}',
         ' OTHER          [H] Return to home',
         '                [V] Change speed',
         '                [Q] Quit',
@@ -64,22 +64,6 @@ def render_joints(arm: str, config: Config, limits: m.Limits, positions) -> str:
         rows.append(f'  [{k}] {info.short:<9} {info.label:<15} {lo:6.0f} .. {hi:<6.0f}'
                     f'   {now:7.1f}')
     rows.append('  [B] Back')
-    return '\n'.join(rows)
-
-
-def render_jog(arm: str, info, joints: List[str], limits: m.Limits, positions,
-               step_deg: float) -> str:
-    """Jog screen: where the jogged joint(s) are, their range, the step and the keys."""
-    rows = ['', '-' * 46, f' JOG  {ARM_NAMES[arm]}: {info.short} ({info.label})']
-    for j in joints:
-        i = m.INDEX[j]
-        lo, hi = math.degrees(limits.safe_lower[i]), math.degrees(limits.safe_upper[i])
-        rows.append(f'   {j:<22} now {math.degrees(positions[i]):+7.1f} deg'
-                    f'   range {lo:+.0f} .. {hi:+.0f}')
-    rows += [f' Step: {step_deg:g} deg',
-             ' [+] / [-]  one step (++ or --- for several)   [<] / [>]  smaller / bigger step',
-             ' [G] go to an angle   [P] lift to the DOF demo pose   [B] back to the menu',
-             '-' * 46]
     return '\n'.join(rows)
 
 
@@ -144,9 +128,14 @@ class StdinStopper:
 
 class App:
     def __init__(self, robot, config: Config, ask: Callable[[str], str] = input,
-                 out: Callable[[str], None] = print, should_stop=None, terminal=None):
+                 out: Callable[[str], None] = print, should_stop=None, terminal=None,
+                 library: Optional[Dict[str, ml.MotionSpec]] = None,
+                 library_problems: Sequence[str] = ()):
         self.robot, self.config = robot, config
         self.terminal = terminal
+        self.library = library or {}
+        self.library_problems = list(library_problems)
+        self.motion_names = list(self.library)  # menu order = library order
         self.ask, self.out = ask, out
         self.should_stop = should_stop or StdinStopper()
         self.arm = 'left'
@@ -201,8 +190,7 @@ class App:
         Lift the arms to the DOF demo pose first; False if that failed.
 
         A single joint starts from the current pose unless the robot is at home
-        (where several swings would hit the floor); a series always starts from
-        the DOF pose (from_anywhere).
+        (where several swings would hit the floor); from_anywhere always lifts.
         """
         if self.robot.near(self.dof_pose()):
             return True
@@ -239,18 +227,6 @@ class App:
         self.attempt(f'{ARM_NAMES[self.arm]}: {info.short} ({info.label})',
                      lambda: self.dof(info.short))
 
-    def all_joints(self) -> None:
-        """Every joint in turn from the DOF demo pose, then home; stops at a failure."""
-        if not self.ensure_dof_pose(from_anywhere=True):
-            return
-        for info in self.config.joints:
-            if not self.attempt(f'{ARM_NAMES[self.arm]}: {info.short} ({info.label})',
-                                lambda: self.dof(info.short)):
-                self.out('Stopping the series here.')
-                return
-        self.out('All joints done.')
-        self.home()
-
     def live_names(self) -> Dict[str, List[str]]:
         """Short joint name -> full name(s) on the selected arm(s), for the live keys."""
         shorts = [j.short for j in self.config.joints][:len(live_jog.KEY_PAIRS)]
@@ -279,8 +255,8 @@ class App:
     def live(self) -> None:
         """Hold a key to move a joint, let go to stop (see live_jog)."""
         if self.terminal is None or not self.terminal.available():
-            self.out('Live control reads single key presses, so it needs a real terminal. '
-                     'Use T to jog by steps instead.')
+            self.out('Live control reads single key presses, so it needs a real terminal '
+                     '(not input from a pipe).')
             return
         if self.pose_text() == 'at home':
             answer = self.ask('At home some directions would hit the floor. Lift the arms to '
@@ -299,57 +275,69 @@ class App:
                     self.config.first_gap, self.config.repeat_gap)
         self.attempt('Live control', session)
 
-    def jog(self) -> None:
-        """
-        Step one joint (or the same joint on both arms) with + / -, or to a typed angle.
+    # --- motion library -------------------------------------------------------------
+    def arm_prefixes(self) -> List[str]:
+        arms = ['left', 'right'] if self.arm == 'both' else [self.arm]
+        return [self.config.arms[a] for a in arms]
 
-        Each step is its own checked motion: it stays in the safe band and is
-        collision-checked by MoveIt, so near the floor some steps are refused.
-        """
-        info = self.pick_joint()
-        if info is None:
+    def show_library(self) -> bool:
+        if not self.library:
+            self.out('No motions found. ' + ' '.join(self.library_problems))
+            return False
+        self.out(mm.render_library(self.motion_names, self.library, self.library_problems))
+        return True
+
+    def play_motion(self) -> None:
+        """Pick one motion from the library, optionally set its parameters, play it."""
+        if not self.show_library():
             return
-        joints = self.joints_for(info.short)
-        step = JOG_DEFAULT_STEP
-        if self.pose_text() == 'at home':
-            self.out(' At home the grippers hang ~2 cm above the floor: steps that would hit it '
-                     'are refused.\n Press P to lift the arms to the DOF demo pose first.')
-        while True:
-            self.out(render_jog(self.arm, info, joints, self.robot.limits,
-                                self.robot.positions(), JOG_STEPS[step]))
+        choice = self.ask('Motion: ').strip()
+        if choice.lower() in ('b', ''):
+            return
+        if choice.isdigit() and 1 <= int(choice) <= len(self.motion_names):
+            name = self.motion_names[int(choice) - 1]
+        elif choice in self.library:
+            name = choice
+        else:
+            self.out(f'"{choice}" is not in the list.')
+            return
+        spec = self.library[name]
+        values: Dict[str, Any] = {}
+        if spec.parameters:
+            defaults = ' '.join(f'{p.name}={p.default}' for p in spec.parameters.values())
+            text = self.ask(f'Parameters (Enter = {defaults}): ')
             try:
-                key = self.ask('Jog: ').strip().lower()
-            except KeyboardInterrupt:
+                values = mm.parse_values(text, spec)
+            except m.MotionError as e:
+                self.out(f'Not played: {e}')
                 return
-            if key in ('b', 'q'):
-                return
-            if not key or key == 's':  # nothing moving: just show the screen again
-                continue
-            if set(key) == {'+'} or set(key) == {'-'} or key == '=':
-                n = len(key) if key != '=' else 1  # '=' is '+' without Shift
-                delta = math.radians(JOG_STEPS[step]) * n * (1 if key[0] in '+=' else -1)
-                self.attempt(f'Jog {info.short} {math.degrees(delta):+g} deg',
-                             lambda: self._jog(joints, delta=delta))
-            elif key in ('<', ',', '>', '.'):
-                step = max(0, step - 1) if key in '<,' else min(len(JOG_STEPS) - 1, step + 1)
-            elif key == 'g':
-                text = self.ask('Angle in degrees: ').strip()
-                try:
-                    goal = math.radians(float(text))
-                except ValueError:
-                    self.out(f'"{text}" is not a number.')
-                    continue
-                self.attempt(f'Jog {info.short} to {float(text):g} deg',
-                             lambda: self._jog(joints, goal=goal))
-            elif key == 'p':
-                self.ensure_dof_pose(from_anywhere=True)
-            else:
-                self.out(f'"{key}" is not a jog key.')
+        self.play_one(name, {**mm.arm_values(spec, self.arm_prefixes()), **values})
 
-    def _jog(self, joints: List[str], delta=None, goal=None) -> Optional[str]:
-        notes = self.robot.jog(joints, self.speed, delta=delta, goal=goal,
-                               should_stop=self.should_stop)
-        return '; '.join(notes) or None
+    def play_one(self, name: str, values: Dict[str, Any]) -> bool:
+        """Build and check the motion, go home if needed, then play it; True if it completed."""
+        spec = self.library[name]
+        self.out(f'\n> Checking {name} (limits, then MoveIt collision check) ...')
+        try:
+            motion = spec.build(self.robot.home, self.robot.limits, values, self.speed)
+            self.robot.check_motion(name, motion)
+        except m.MotionError as e:
+            self.out(f'Not played: {e}')
+            return False
+        self.out(f'All checks passed ({motion.duration:.0f} s of motion at speed '
+                 f'{self.speed:.2f}).')
+        if self.pose_text() != 'at home':
+            if not self.attempt('Every motion starts at home: returning home first',
+                                lambda: self.robot.go_home(self.speed,
+                                                           should_stop=self.should_stop)):
+                return False
+        shown = ' '.join(f'{p}={v}' for p, v in spec.resolve(values).items())
+        return self.attempt(f'{spec.title} ({shown or "no parameters"})',
+                            lambda: self._play(name, motion))
+
+    def _play(self, name: str, motion) -> str:
+        worst = self.robot.play(name, motion, collision_check=False,  # checked above
+                                should_stop=self.should_stop)
+        return f'back at home, at most {worst:.3f} rad from the plan'
 
     def change_speed(self) -> None:
         text = self.ask(f'Speed 0.1 (slow) .. 1.0 (fastest) [now {self.speed:.2f}]: ').strip()
@@ -381,10 +369,11 @@ class App:
 
     # --- loop --------------------------------------------------------------------
     def run(self) -> None:
-        actions = {'d': self.choose_joint, 'a': self.all_joints, 'j': self.live, 't': self.jog,
+        actions = {'d': self.choose_joint, 'j': self.live, 'm': self.play_motion,
                    'h': self.home, 'v': self.change_speed}
         while True:
-            self.out(render_main(self.arm, self.speed, self.pose_text(), self.config))
+            self.out(render_main(self.arm, self.speed, self.pose_text(), self.config,
+                                 self.motion_names))
             try:
                 choice = self.ask('Choose: ').strip().lower()
             except HangUp:
@@ -412,7 +401,7 @@ def find_world() -> Path:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description='GIP Garage Motion Player')
+    parser = argparse.ArgumentParser(description='Moretea Arm Motion Player')
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--attach', action='store_true',
@@ -426,7 +415,7 @@ def main(argv=None) -> int:
         print(f'Configuration error: {e}')
         return 2
 
-    from garage_motion_player import simulation_manager as sm
+    from arm_motion_player import simulation_manager as sm
     sm.apply_environment(sm.ros_environment(config.ros_domain_id, config.gz_partition))
     sim = None
     if not args.attach:
@@ -444,11 +433,11 @@ def main(argv=None) -> int:
     import rclpy
     from rclpy.node import Node
     from rclpy.signals import SignalHandlerOptions
-    from garage_motion_player.robot import Robot
+    from arm_motion_player.robot import Robot
     rclpy.init(signal_handler_options=SignalHandlerOptions.NO)  # Ctrl-C = KeyboardInterrupt
     for sig in (signal.SIGHUP, signal.SIGTERM):  # terminal closed / kill: still shut down the sim
         signal.signal(sig, _hang_up)
-    node = Node('garage_motion_player')
+    node = Node('arm_motion_player')
     code = 0
     try:
         robot = Robot(node, print, config.tracking_tolerance)
@@ -459,7 +448,13 @@ def main(argv=None) -> int:
                       progress=lambda t: print(f'  ... {t}'),
                       poll=lambda: rclpy.spin_once(node, timeout_sec=0.1), sim=sim)
         print('Simulation ready.')
-        App(robot, config, terminal=Terminal()).run()
+        library, problems = ml.load_library([ml.builtin_folder(), *config.motion_folders],
+                                            robot.home, robot.limits)
+        print(f'Motion library: {", ".join(library) or "none"}')
+        for problem in problems:
+            print(f'  ! skipped: {problem}')
+        App(robot, config, terminal=Terminal(), library=library,
+            library_problems=problems).run()
     except (sm.SimulationError, m.MotionError) as e:
         print(f'Error: {e}')
         code = 1

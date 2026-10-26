@@ -3,8 +3,8 @@ from pathlib import Path
 
 from arm_motion_demos import geometry
 from arm_motion_demos import motions as m
-from garage_motion_player import dof_motions as d
-from garage_motion_player.config import load_config
+from arm_motion_player import dof_motions as d
+from arm_motion_player.config import load_config
 import numpy as np
 import pytest
 
@@ -134,61 +134,3 @@ def test_every_swing_from_the_dof_pose_is_clear(config, dof_pose, limits, urdf, 
                 worst = np.minimum(worst, robot.clearances(dict(zip(m.JOINTS, q))))
     floor, arm_arm, a_body, b_body = worst
     assert floor >= 0.05 and arm_arm >= 0.05 and min(a_body, b_body) >= 0.02, worst
-
-
-# --- jog ------------------------------------------------------------------------------
-def test_jog_moves_only_the_selected_joint_by_the_step(home, limits):
-    j = 'arm_a_joint1'
-    target, notes = d.jog_target(home, [j], limits, delta=np.radians(5))
-    assert target[m.INDEX[j]] == pytest.approx(home[m.INDEX[j]] + np.radians(5))
-    others = np.delete(target - home, m.INDEX[j])
-    assert not others.any() and notes == []
-
-
-def test_jog_to_an_angle_on_both_arms(home, limits):
-    joints = ['arm_a_joint4', 'arm_b_joint4']
-    target, _ = d.jog_target(home, joints, limits, goal=0.3)
-    assert [target[m.INDEX[j]] for j in joints] == [0.3, 0.3]
-
-
-def test_jog_is_clipped_to_the_safe_band_and_says_so(home, limits):
-    j = 'arm_a_joint1'
-    i = m.INDEX[j]
-    target, notes = d.jog_target(home, [j], limits, goal=99.0)
-    assert target[i] == pytest.approx(limits.safe_upper[i]) and 'stopped at' in notes[0]
-
-
-def test_jog_at_the_end_of_the_range_is_refused(home, limits):
-    j = 'arm_a_joint1'
-    start = home.copy()
-    start[m.INDEX[j]] = limits.safe_upper[m.INDEX[j]]
-    with pytest.raises(m.MotionError, match='already at the upper end'):
-        d.jog_target(start, [j], limits, delta=0.1)
-    with pytest.raises(m.MotionError, match='already there'):
-        d.jog_target(home, [j], limits, goal=float(home[m.INDEX[j]]))
-
-
-def test_jog_refuses_a_joint_outside_its_safe_band(home, limits):
-    j = 'arm_a_joint2'
-    start = home.copy()
-    start[m.INDEX[j]] = limits.upper[m.INDEX[j]]  # exactly on the limit (jammed)
-    with pytest.raises(m.MotionError, match='return home first'):
-        d.jog_target(start, [j], limits, delta=-0.1)
-
-
-def test_jog_needs_exactly_one_of_step_or_angle(home, limits):
-    for kwargs in ({}, {'delta': 0.1, 'goal': 0.2}):
-        with pytest.raises(m.MotionError, match='either'):
-            d.jog_target(home, ['arm_a_joint1'], limits, **kwargs)
-
-
-@pytest.mark.parametrize('step', [np.radians(1), np.radians(20), 2.0])
-@pytest.mark.parametrize('speed', [0.1, 0.5, 1.0])
-def test_jog_motion_is_short_and_within_limits(home, limits, step, speed):
-    target, _ = d.jog_target(home, ['arm_a_joint1', 'arm_b_joint1'], limits, delta=step)
-    motion = d.jog_motion(home, target, limits, speed)
-    assert m.validate(motion, limits) == []
-    assert motion.q[-1] == pytest.approx(target)
-    assert motion.duration >= d.JOG_MIN_DURATION / speed - m.DT
-    if step < 0.1 and speed == 1.0:
-        assert motion.duration < 0.5  # quicker than the normal 0.5 s minimum move

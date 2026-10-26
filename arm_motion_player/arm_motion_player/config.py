@@ -32,6 +32,7 @@ class Config:
     arms: Dict[str, str]          # 'left' -> 'arm_a'
     joints: List[JointInfo]
     dof_pose: Dict[str, float]    # short joint name -> rad, applied to both arms
+    motion_folders: List[Path]    # extra motion library folders
     recordings_dir: Path
     logs_dir: Path
 
@@ -104,6 +105,9 @@ def load_config(path: Path, workspace: Path) -> Config:
         arms=dict(arms),
         joints=joints,
         dof_pose={k: float(v) for k, v in dof_pose.items()},
+        motion_folders=[Path(workspace) / f for f in _get(
+            data, 'motions.folders', list,
+            lambda v: all(isinstance(f, str) and f for f in v), ' (a list of folder names)')],
         recordings_dir=Path(workspace) / _get(data, 'recordings.folder', str, bool),
         logs_dir=Path(workspace) / _get(data, 'logs.folder', str, bool),
     )

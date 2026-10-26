@@ -2,7 +2,7 @@ from glob import glob
 
 from setuptools import find_packages, setup
 
-package_name = 'garage_motion_player'
+package_name = 'arm_motion_player'
 
 setup(
     name=package_name,
@@ -17,13 +17,13 @@ setup(
     zip_safe=True,
     maintainer='eileen',
     maintainer_email='eileenteoh10399@gmail.com',
-    description='Menu-driven motion player for the GIP Garage dual-arm robot in Gazebo',
+    description='Menu-driven motion player for the moretea dual-arm robot in Gazebo',
     license='TODO: License declaration',
     extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
-            'player = garage_motion_player.cli:main',
-            'check_player = garage_motion_player.check_player:main',
+            'player = arm_motion_player.cli:main',
+            'check_player = arm_motion_player.check_player:main',
         ],
     },
 )

@@ -1,0 +1,24 @@
+# Wave: one arm out to the side with the forearm up, the hand swaying side to side.
+# Poses list joint1..joint6 of an arm, in rad.
+name: wave
+title: Wave
+description: One arm out to the side, forearm up, hand swaying side to side.
+
+parameters:
+  repetitions: {type: int, default: 3, min: 1, max: 20, help: number of waves}
+  arm: {type: choice, default: arm_a, choices: [arm_a, arm_b], help: which arm waves}
+
+poses:
+  hand_up:
+    "{arm}": [1.3, -1.57, -1.2, -0.3, 1.57, 0.01]   # arm out to the side, forearm up
+    "{arm}_gripper_joint": 0.6                       # hand open
+
+steps:
+  - move: hand_up
+    label: "{arm}: raise hand"
+  - oscillate:
+      amplitude: {"{arm}": [0.0, 0.0, 0.25, 0.2, 0.25, 0.0]}   # hand sways ~20 cm
+      cycles: repetitions
+    label: "{arm}: wave x{repetitions}"
+  - move: home
+    label: back to home

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GIP Garage Motion Player: one command to start the simulation and the menu.
+# Moretea Arm Motion Player: one command to start the simulation and the menu.
 #
 #   ./run.sh              Gazebo window + menu
 #   ./run.sh --headless   no Gazebo window (videos can still be recorded)
@@ -25,7 +25,7 @@ source "$ROS_SETUP"
 # shellcheck disable=SC1091
 source "$WS/install/setup.bash"
 
-for pkg in garage_motion_player arm_motion_demos arm_body_moveit_config arm_body_description; do
+for pkg in arm_motion_player arm_motion_demos arm_body_moveit_config arm_body_description; do
   ros2 pkg prefix "$pkg" >/dev/null 2>&1 || fail "package '$pkg' is not built.
   Run:  cd $WS && colcon build && source install/setup.bash"
 done
@@ -36,4 +36,4 @@ done
 CONFIG="$HERE/config/player.yaml"
 [ -f "$CONFIG" ] || fail "settings file missing: $CONFIG"
 
-exec ros2 run garage_motion_player player --config "$CONFIG" --workspace "$WS" "$@"
+exec ros2 run arm_motion_player player --config "$CONFIG" --workspace "$WS" "$@"
