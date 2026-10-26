@@ -4,6 +4,14 @@ Dual-arm robot (two 6-DOF arms + grippers on an aluminium-extrusion body), gener
 
 ![Arm A kinematic chain](docs/arm_chain.png)
 
+## Demos
+Recorded in Gazebo Harmonic (real speed; the dual-arm routine at 1.5x). Play them yourself
+with `arm_motion_player/run.sh`, menu **M**.
+
+| Wave | Dual-arm routine | 67 dance |
+|:---:|:---:|:---:|
+| ![Wave](docs/media/wave.gif) | ![Dual-arm routine](docs/media/dual_arm.gif) | ![67 dance](docs/media/dance67.gif) |
+
 ## Quick start
 ```bash
 mkdir -p ~/arm_body_ws/src && cd ~/arm_body_ws/src
@@ -25,7 +33,8 @@ Full setup, commands and joint reference: **[docs/RUN_GUIDE.md](docs/RUN_GUIDE.m
 | `arm_body_description/` | ROS 2 package: URDF/xacro, meshes, controllers, launch files |
 | `docs/RUN_GUIDE.md` | Install, build, RViz, Gazebo, joint/controller reference, troubleshooting |
 | `arm_body_moveit_config/` | MoveIt 2 configuration: mock demo and MoveIt on Gazebo ([README](arm_body_moveit_config/README.md)) |
-| `arm_motion_demos/` | Gesture demos (wave, dual-arm, 67 dance), sequences, tests, video recording ([README](arm_motion_demos/README.md)) |
+| `arm_motion_demos/` | Gesture demos (wave, dual-arm, 67 dance) as YAML motion files, sequences, tests, video recording ([README](arm_motion_demos/README.md)) |
+| `arm_motion_player/` | One-command menu (`./run.sh`): starts Gazebo + MoveIt, single-joint demos, live keyboard control, the motion library ([README](arm_motion_player/README.md)) |
 
 ## Key facts
 - 30 links, 14 controllable joints (6 per arm + 1 gripper per arm), 6.82 kg total

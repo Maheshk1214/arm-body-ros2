@@ -8,6 +8,10 @@ Gesture demonstrations for the dual-arm robot, in simulation (MoveIt mock demo o
 | `dual_arm` | Both arms forward → raised together → alternating up/down → out to the sides → symmetric flaps |
 | `dance67` | "6-7": forearms forward, palms (grippers) open, hands bobbing up and down in turn; the wrists counter-rotate so the palms stay level |
 
+| Wave | Dual-arm routine (1.5x) | 67 dance |
+|:---:|:---:|:---:|
+| ![Wave](../docs/media/wave.gif) | ![Dual-arm routine](../docs/media/dual_arm.gif) | ![67 dance](../docs/media/dance67.gif) |
+
 Every gesture starts and ends at the SRDF `home` pose, so gestures can be chained in any order.
 The gestures are YAML files in [`motions/`](motions) (the motion library, see
 [Adding a motion](#adding-a-motion)); `motion_demo` and the arm motion player both read them.
