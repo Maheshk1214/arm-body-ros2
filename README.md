@@ -69,3 +69,10 @@ Parameters and details: **[arm_motion_demos/README.md](arm_motion_demos/README.m
 - Arm B mirrors arm A: send the same joint values for mirror-image motion
 - Self-collision is optional: `gazebo.launch.py self_collide:=true`
 - Real hardware status: arm A joints 1–5 connected; wrist roll, gripper and arm B still simulated
+
+## Contributors
+| Who | Contribution |
+|---|---|
+| [Aqid Rafiuddin](https://github.com/Aqid2108) | Original robot description package (URDF, meshes, RViz/Gazebo launch) and run guide |
+| [Eileen Teoh Yan Zhen](https://github.com/eileentyz) | MoveIt 2 configuration, MoveIt on Gazebo, gesture demos (wave, dual-arm, 67) and menu player with DOF demos, jog and live control |
+| [Mahesh](https://github.com/Maheshk1214) | Real left arm (arm A) Feetech hardware bridge and calibration, gripper camera and ArUco tag reach |
