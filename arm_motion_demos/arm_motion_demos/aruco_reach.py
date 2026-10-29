@@ -43,7 +43,8 @@ from visualization_msgs.msg import Marker, MarkerArray
 import xacro
 import yaml
 
-# the SRDF's aruco_look, taught on the real arm A (was elbow_90: [0.0, -0.01, 0.0, -1.55, 1.55, 1.5708])
+# the SRDF's aruco_look, taught on the real arm A
+# (was elbow_90: [0.0, -0.01, 0.0, -1.55, 1.55, 1.5708])
 LOOK_POSE = [0.009, -3.019, 0.143, 0.982, 2.109, 2.022]
 STILL_VELOCITY = 0.02      # rad/s, arm considered still for detection
 FALLBACK_SPEED = 0.025     # MoveIt scaling if joint_limits.yaml has no main speed
