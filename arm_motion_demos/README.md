@@ -81,3 +81,47 @@ at home and pass every check above; a file that does not is skipped with the rea
 The YAML files reproduce the earlier Python gestures sample for sample
 (`test/test_motion_library.py` compares them with a frozen copy, `test/legacy_gestures.py`).
 
+## ArUco reach (arm A's gripper camera)
+`aruco_reach` finds an ArUco tag (DICT_4X4_50, id 0, 50 mm black square by default) with the
+OV3660 camera on arm A's gripper and moves the jaw tip `standoff` m in front of it:
+1. moves arm A to `look_pose` (taught on the real arm, camera facing the work area);
+2. averages the tag pose over `samples` frames (solvePnP) and transforms it to `world` with TF;
+3. solves IK for the jaw tip (5-DOF arm: position exact, jaws turned towards the tag as far as possible);
+4. plans and executes the joint goal with MoveIt (collision-checked).
+
+The camera pose comes from the Fusion assembly "new mount (face up)": see
+`arm_body_description/urdf/arm_a_camera.xacro` (`arm_a_camera_optical_frame`).
+
+```bash
+# simulated camera and tag (needs working Gazebo rendering)
+ros2 launch arm_motion_demos aruco_reach_sim.launch.py
+# or: real OV3660 (ESP32 MJPEG stream) + real tag, simulated arm
+ros2 launch arm_motion_demos aruco_reach_sim.launch.py camera:=stream stream_url:=http://<esp32-ip>:81/stream
+
+# second terminal
+ros2 run arm_motion_demos aruco_reach
+ros2 run arm_motion_demos aruco_reach --ros-args -p standoff:=0.15 -p dry_run:=true
+```
+With `camera:=stream`, the simulated arm treats the real camera as if it were on the gripper at
+`look_pose`: hold or mount the camera facing forward, and put the tag 25–30 cm in front of it,
+roughly level with it. A tag out of reach is refused (exit code 2), nothing moves.
+`/arm_a/camera/aruco_debug` shows the detection (opened in rqt_image_view by the launch file).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `marker_id` / `marker_size` / `dictionary` | `0` / `0.05` / `DICT_4X4_50` | Tag to look for; size is the black square, in m |
+| `standoff` | `0.0` | Jaw tip distance in front of the tag (m); 0 = touch the tag |
+| `look_pose` | `[0.009, -3.019, 0.143, 0.982, 2.109, 2.022]` (SRDF `aruco_look`, taught on the real arm) | Arm A joints for detection; `[]` = detect from where it is |
+| `samples` | `10` | Frames averaged |
+| `max_position_error` | `0.01` | Refuse if IK can't get the jaw tip this close to the goal (m) |
+| `settle_tolerance` | `0.05` | Per-joint error (rad) at which a move counts as arrived; real servos sag a little under load |
+| `speed` | `0` | MoveIt velocity/acceleration scaling; `0` = the main speed (`default_*_scaling_factor` in `arm_body_moveit_config/config/joint_limits.yaml`), same as RViz's Plan & Execute |
+| `dry_run` | `false` | Detect and plan only |
+| `hold_roll` | `false` | Keep joint6 (wrist roll) where it is in the IK; for a real arm without a joint6 servo |
+
+`camera_stream` parameters (launch arguments with `camera:=stream`): `stream_url` (MJPEG URL or
+device index), `horizontal_fov` (rad, used without calibration; 0.96 ≈ a 66° diagonal lens),
+`calibration_file` (ROS camera calibration YAML, e.g. from `camera_calibration`), `rotation`
+(0/90/180/270° clockwise, to turn a sideways or upside-down camera image upright), `fourcc`
+(device index only: pixel format to request, e.g. `MJPG` when the default raw format is slow).
+Without a calibration, distances can be ~10 % off: calibrate before using it on the real arm.

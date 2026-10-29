@@ -76,6 +76,10 @@ class Robot:
                 cache[link] = t
         return cache[link]
 
+    def link_pose(self, link, q):
+        """4x4 pose of `link` in the URDF root frame for joint values `q` (name -> rad)."""
+        return self._world(link, q, {})
+
     def clearances(self, q):
         """(floor, arm-arm, arm_a-body, arm_b-body) minimum distances in m."""
         cache, world = {}, {}

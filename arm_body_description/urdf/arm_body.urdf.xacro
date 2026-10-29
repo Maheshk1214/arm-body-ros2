@@ -4,6 +4,12 @@
   <!-- Links, joints, meshes, masses and inertias generated from Fusion -->
   <xacro:include filename="$(find arm_body_description)/urdf/arm_body_core.xacro"/>
 
+  <!-- OV3660 camera on arm A's gripper (Gazebo camera sensor). Off with camera:=false -->
+  <xacro:arg name="camera" default="true"/>
+  <xacro:if value="$(arg camera)">
+    <xacro:include filename="$(find arm_body_description)/urdf/arm_a_camera.xacro"/>
+  </xacro:if>
+
   <!-- Self-collision (arm vs body, arm vs arm) in Gazebo. Off by default.
        Turn on with:  ros2 launch arm_body_description gazebo.launch.py self_collide:=true -->
   <xacro:arg name="self_collide" default="false"/>

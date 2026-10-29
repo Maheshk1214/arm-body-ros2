@@ -6,6 +6,8 @@
   <xacro:arg name="initial_positions_file" default="$(find arm_body_moveit_config)/config/initial_positions.yaml"/>
 
   <xacro:include filename="$(find arm_body_description)/urdf/arm_body_core.xacro"/>
+  <!-- gripper camera (visual only): arm_a_camera_optical_frame for the real camera / aruco_reach -->
+  <xacro:include filename="$(find arm_body_description)/urdf/arm_a_camera.xacro"/>
 
   <xacro:include filename="$(find arm_body_moveit_config)/config/arm_body.ros2_control.xacro"/>
   <xacro:arm_body_ros2_control name="MockSystem" initial_positions_file="$(arg initial_positions_file)"/>

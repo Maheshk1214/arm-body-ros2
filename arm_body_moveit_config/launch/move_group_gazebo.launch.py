@@ -20,6 +20,7 @@ from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
+import yaml
 
 
 def launch_setup(context):
@@ -38,6 +39,14 @@ def launch_setup(context):
     )
     sim_time = {'use_sim_time': True}
     gazebo_params = os.path.join(moveit_config.package_path, 'config', 'gazebo_execution.yaml')
+    # The main speed (default_*_scaling_factor in joint_limits.yaml) for RViz's planning panel:
+    # moveit_config.joint_limits gives RViz the per-joint limits only, so the panel would
+    # otherwise start from its own scaling and plan at a different speed than move_group.
+    with open(os.path.join(moveit_config.package_path, 'config', 'joint_limits.yaml')) as f:
+        limits = yaml.safe_load(f)
+    main_speed = {f'robot_description_planning.{k}': float(limits[k])
+                  for k in ('default_velocity_scaling_factor',
+                            'default_acceleration_scaling_factor') if k in limits}
 
     wait_for_controllers = Node(
         package='arm_body_moveit_config', executable='check_sim_controllers.py',
@@ -62,7 +71,8 @@ def launch_setup(context):
 
     rviz = Node(
         package='rviz2', executable='rviz2', output='log',
-        arguments=['-d', os.path.join(moveit_config.package_path, 'config', 'moveit.rviz')],
+        arguments=['-d', LaunchConfiguration('rviz_config').perform(context)
+                   or os.path.join(moveit_config.package_path, 'config', 'moveit.rviz')],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
@@ -70,6 +80,7 @@ def launch_setup(context):
             moveit_config.planning_pipelines,
             moveit_config.joint_limits,
             gazebo_params,
+            main_speed,
             sim_time,
         ])
 
@@ -94,6 +105,8 @@ def generate_launch_description():
         DeclareLaunchArgument('self_collide', default_value='false',
                               description='Must match the value Gazebo was launched with'),
         DeclareLaunchArgument('rviz', default_value='true', description='Start RViz'),
+        DeclareLaunchArgument('rviz_config', default_value='',
+                              description='RViz config file (default: config/moveit.rviz)'),
         DeclareLaunchArgument('ground_plane', default_value='true',
                               description="Add Gazebo's ground plane to the planning scene"),
         DeclareLaunchArgument('controller_timeout', default_value='120',

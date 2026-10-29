@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<!-- ArUco DICT_4X4_50 id 0 (50 mm marker, 12.5 mm white border) on a static card.
+     The model origin is the tag centre; the printed side faces the model's +z.
+     Drag it around in Gazebo (Translate/Rotate tools) and run aruco_reach again. -->
+<sdf version="1.6">
+  <model name="aruco_tag_0">
+    <static>true</static>
+    <link name="tag">
+      <visual name="marker">
+        <pose>0 0 0.0011 0 0 0</pose>
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>0.075 0.075</size>
+          </plane>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://aruco_tag_0/materials/textures/aruco_4x4_50_id0.png</albedo_map>
+              <metalness>0</metalness>
+              <roughness>1</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+      <visual name="card">
+        <geometry><box><size>0.09 0.09 0.002</size></box></geometry>
+        <material>
+          <ambient>0.9 0.9 0.9 1</ambient>
+          <diffuse>0.9 0.9 0.9 1</diffuse>
+        </material>
+      </visual>
+      <collision name="card">
+        <geometry><box><size>0.09 0.09 0.002</size></box></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

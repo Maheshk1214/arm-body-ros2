@@ -1,0 +1,40 @@
+# Real arm A on one Feetech bus. joint: servo id and sign (+1 or -1 if the servo turns the other
+# way from the URDF axis). Joints without a servo are simulated: they hold `simulated` values
+# and follow commanded trajectories instantly, so MoveIt always sees a complete robot state.
+port: /dev/serial/by-id/usb-1a86_USB_Single_Serial_5AE6082224-if00
+baud: 1000000
+rate: 50.0                 # Hz, read + command loop
+calibration_file: ~/.ros/arm_body_hardware/arm_a_calibration.yaml
+
+servos:
+  arm_a_joint1: {id: 1, sign: 1}
+  arm_a_joint2: {id: 2, sign: 1}
+  arm_a_joint3: {id: 3, sign: 1}
+  arm_a_joint4: {id: 4, sign: 1}
+  arm_a_joint5: {id: 5, sign: 1}
+  # Gripper is servo id 6 but not calibrated yet; move it back here from `simulated` when it is:
+  # arm_a_gripper_joint: {id: 6, sign: 1}
+
+# No servo yet: wrist roll. Arm B is not connected. Values are the SRDF "home" pose.
+simulated:
+  arm_a_joint6: 0.01
+  arm_a_gripper_joint: 0.01
+  arm_b_joint1: 0.0
+  arm_b_joint2: -0.01
+  arm_b_joint3: 0.0
+  arm_b_joint4: 0.0
+  arm_b_joint5: 0.01
+  arm_b_joint6: 0.01
+  arm_b_gripper_joint: 0.01
+
+# FollowJointTrajectory action servers (names match moveit_controllers_real.yaml)
+controllers:
+  arm_a_controller:
+    joints: [arm_a_joint1, arm_a_joint2, arm_a_joint3, arm_a_joint4, arm_a_joint5, arm_a_joint6]
+    goal_tolerance: 0.05   # rad, checked on the real joints after the trajectory ends
+  gripper_a_controller:
+    joints: [arm_a_gripper_joint]
+    goal_tolerance: .inf   # a gripper closing on an object never reaches its goal
+
+settle_time: 1.0           # s to wait after a trajectory for the joints to reach tolerance
+max_start_error: 0.15      # rad: refuse a trajectory that starts this far from the real arm

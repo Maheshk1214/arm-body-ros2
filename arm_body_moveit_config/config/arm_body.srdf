@@ -36,6 +36,25 @@
         <joint name="arm_a_joint5" value="0.01"/>
         <joint name="arm_a_joint6" value="0.01"/>
     </group_state>
+    <!-- L shape: upper arm straight down, elbow (joint4) bent ~90 deg (1.55 rad, kept off its
+         +-90 deg limit), wrist straight so the gripper is level; joint6 puts the camera on top -->
+    <group_state name="elbow_90" group="arm_a">
+        <joint name="arm_a_joint1" value="0"/>
+        <joint name="arm_a_joint2" value="-0.01"/>
+        <joint name="arm_a_joint3" value="0"/>
+        <joint name="arm_a_joint4" value="-1.55"/>
+        <joint name="arm_a_joint5" value="1.55"/>
+        <joint name="arm_a_joint6" value="1.5708"/>
+    </group_state>
+    <!-- aruco_reach's look pose (LOOK_POSE in aruco_reach.py), taught on the real arm -->
+    <group_state name="aruco_look" group="arm_a">
+        <joint name="arm_a_joint1" value="0.009"/>
+        <joint name="arm_a_joint2" value="-3.019"/>
+        <joint name="arm_a_joint3" value="0.143"/>
+        <joint name="arm_a_joint4" value="0.982"/>
+        <joint name="arm_a_joint5" value="2.109"/>
+        <joint name="arm_a_joint6" value="2.022"/>
+    </group_state>
     <group_state name="home" group="arm_b">
         <joint name="arm_b_joint1" value="0"/>
         <joint name="arm_b_joint2" value="-0.01"/>

@@ -1,8 +1,8 @@
 # Overrides/additions to the URDF joint limits, used by MoveIt's time parameterisation.
 # Velocities match the URDF. The URDF has no acceleration limits, so these are conservative
 # placeholders and still need to be checked against the real Feetech servos.
-default_velocity_scaling_factor: 0.1
-default_acceleration_scaling_factor: 0.1
+default_velocity_scaling_factor: 0.75
+default_acceleration_scaling_factor: 0.75
 
 joint_limits:
   arm_a_joint1:

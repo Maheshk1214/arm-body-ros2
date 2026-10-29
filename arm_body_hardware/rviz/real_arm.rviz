@@ -1,0 +1,88 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /MotionPlanning1
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Value: true
+    - Class: moveit_rviz_plugin/MotionPlanning
+      Name: MotionPlanning
+      Planned Path:
+        Loop Animation: false
+        Show Robot Visual: true
+        Show Trail: true
+        State Display Time: 0.05 s
+        Trail Step Size: 3
+        Trajectory Topic: display_planned_path
+      Planning Request:
+        Interactive Marker Size: 0.1
+        Planning Group: arm_a
+        Query Goal State: true
+        Query Start State: false
+      Planning Scene Topic: monitored_planning_scene
+      Robot Description: robot_description
+      Scene Geometry:
+        Scene Alpha: 1
+      Scene Robot:
+        Robot Alpha: 1
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Name: Gripper camera
+      Normalize Range: true
+      Topic:
+        Depth: 2
+        Durability Policy: Volatile
+        Reliability Policy: Best Effort
+        Value: /arm_a/camera/image_raw
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Name: Camera (ArUco detection, while aruco_reach runs)
+      Normalize Range: true
+      Topic:
+        Depth: 2
+        Durability Policy: Volatile
+        Reliability Policy: Best Effort
+        Value: /arm_a/camera/aruco_debug
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Name: ArUco tag and goal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+        Value: /aruco_reach/markers
+      Value: true
+    - Class: rviz_default_plugins/Axes
+      Name: Camera (arm_a_camera_optical_frame)
+      Reference Frame: arm_a_camera_optical_frame
+      Length: 0.08
+      Radius: 0.006
+      Value: true
+  Global Options:
+    Fixed Frame: world
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.6
+      Focal Point:
+        X: 0.35
+        Y: 0.0
+        Z: 0.3
+      Name: Current View
+      Pitch: 0.35
+      Target Frame: world
+      Yaw: -0.9
+Window Geometry:
+  Height: 1000
+  Width: 1500

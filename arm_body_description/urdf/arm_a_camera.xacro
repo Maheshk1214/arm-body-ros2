@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!-- OV3660 camera on arm A's gripper, from the Fusion assembly "new mount (face up)".
+     The STEP gripper was fitted to arm_a_gripper_1 + sts3215_7 + gripper_2 (median error
+     0.4 mm): gripper_1 (x, y, z) = STEP (y - 144.6, z, x) mm. In gripper_1's frame the lens
+     front is at (32.3, 55.2, -16.5) mm and the lens looks along +x, the same way as the jaws.
+     The optical centre is taken 1.5 mm behind the lens front.
+
+     arm_a_camera_link follows Gazebo's camera convention (x forward, z = image up);
+     arm_a_camera_optical_frame follows OpenCV's (z forward, x right, y down in the image).
+     Visual-only boxes (case and mount), so MoveIt's collision matrix is unchanged.
+     Replace the intrinsics below with your calibration before trusting distances. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <link name="arm_a_camera_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.010"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <!-- camera case, 15.1 x 36.5 x 31.7 mm along gripper_1 x, y, z
+         (here x = gripper_1 x, y = -gripper_1 z, z = gripper_1 y) -->
+    <visual>
+      <origin xyz="-0.00475 0 -0.00025" rpy="0 0 0"/>
+      <geometry><box size="0.0151 0.0317 0.0365"/></geometry>
+      <material name="camera_green"><color rgba="0.15 0.55 0.30 1"/></material>
+    </visual>
+    <!-- mount between gripper and case -->
+    <visual>
+      <origin xyz="-0.0048 0 -0.0258" rpy="0 0 0"/>
+      <geometry><box size="0.0282 0.0257 0.01455"/></geometry>
+      <material name="camera_mount_blue"><color rgba="0.10 0.35 0.85 1"/></material>
+    </visual>
+    <!-- lens, 8 mm diameter -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.570796 0"/>
+      <geometry><cylinder radius="0.004" length="0.003"/></geometry>
+      <material name="lens_black"><color rgba="0.05 0.05 0.05 1"/></material>
+    </visual>
+  </link>
+  <joint name="arm_a_camera_fixed" type="fixed">
+    <parent link="arm_a_gripper_1"/>
+    <child link="arm_a_camera_link"/>
+    <origin xyz="0.0308 0.0552 -0.0165" rpy="-1.570796 0 0"/>
+  </joint>
+
+  <link name="arm_a_camera_optical_frame"/>
+  <joint name="arm_a_camera_optical_fixed" type="fixed">
+    <parent link="arm_a_camera_link"/>
+    <child link="arm_a_camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.570796 0 -1.570796"/>
+  </joint>
+
+  <!-- Gazebo camera. 640x480 and ~55 deg horizontal FOV (a typical 66 deg diagonal OV3660
+       module lens); needs the Sensors system in the world (see arm_motion_demos/worlds). -->
+  <gazebo reference="arm_a_camera_link">
+    <sensor name="arm_a_camera" type="camera">
+      <always_on>true</always_on>
+      <update_rate>15</update_rate>
+      <topic>arm_a/camera/image_raw</topic>
+      <gz_frame_id>arm_a_camera_optical_frame</gz_frame_id>
+      <camera>
+        <camera_info_topic>arm_a/camera/camera_info</camera_info_topic>
+        <horizontal_fov>0.96</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>5.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+</robot>

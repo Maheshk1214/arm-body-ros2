@@ -55,7 +55,7 @@ again, and checks that all-zero goals are planned no closer than 5e-3 rad to the
 ## Planning groups
 | Group | Contents | Named states |
 |---|---|---|
-| `arm_a` | chain `arm_a_servo_base` → `arm_a_gripper_1` (joints 1–6) | `home` (joint2 −0.01, joint5/6 0.01, rest 0) |
+| `arm_a` | chain `arm_a_servo_base` → `arm_a_gripper_1` (joints 1–6) | `home` (joint2 −0.01, joint5/6 0.01, rest 0), `elbow_90` (upper arm down, elbow ~90°, gripper level) |
 | `arm_b` | chain `arm_b_servo_base` → `arm_b_gripper_1` (joints 1–6) | `home` |
 | `both_arms` | `arm_a` + `arm_b` (12 joints) | `home` |
 | `gripper_a` / `gripper_b` | `arm_?_gripper_joint` (0 = closed limit) | `open` (1.2 rad), `closed` (0.01) |

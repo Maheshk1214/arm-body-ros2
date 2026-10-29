@@ -1,0 +1,14 @@
+# move_group / RViz settings for the real arm (real_arm.launch.py)
+/**:
+  ros__parameters:
+    trajectory_execution:
+      # Servos lag their setpoints a little; give the bridge time to settle at the goal
+      allowed_execution_duration_scaling: 1.5
+      allowed_goal_duration_margin: 1.5
+      allowed_start_tolerance: 0.05
+
+    # Start slow on real hardware (the simulation uses 0.75). Raise it in RViz's
+    # "Velocity/Accel. Scaling" once the arm moves as expected.
+    robot_description_planning:
+      default_velocity_scaling_factor: 0.1
+      default_acceleration_scaling_factor: 0.1

@@ -33,7 +33,8 @@ def generate_launch_description():
     moveit = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(moveit_launch),
         launch_arguments={'self_collide': LaunchConfiguration('self_collide'),
-                          'rviz': LaunchConfiguration('rviz')}.items())
+                          'rviz': LaunchConfiguration('rviz'),
+                          'rviz_config': LaunchConfiguration('rviz_config')}.items())
 
     precheck = Node(package='arm_body_moveit_config', executable='check_sim_controllers.py',
                     arguments=['--precheck'], output='screen')
@@ -49,6 +50,8 @@ def generate_launch_description():
         DeclareLaunchArgument('self_collide', default_value='false',
                               description='Let the arms collide with the body and each other'),
         DeclareLaunchArgument('rviz', default_value='true', description='Start MoveIt RViz'),
+        DeclareLaunchArgument('rviz_config', default_value='',
+                              description='RViz config file (default: config/moveit.rviz)'),
         precheck,
         RegisterEventHandler(OnProcessExit(target_action=precheck, on_exit=on_precheck)),
     ])

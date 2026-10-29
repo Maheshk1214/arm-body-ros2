@@ -23,6 +23,16 @@
   <exec_depend>shape_msgs</exec_depend>
   <!-- record_demo: Gazebo's Python transport bindings (gz.transport13) come with Gazebo -->
   <exec_depend>ffmpeg</exec_depend>
+  <!-- aruco_reach: gripper camera, ArUco detection, TF, Gazebo camera bridge -->
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>rqt_image_view</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
