@@ -1,6 +1,10 @@
-# Arm + Body: ROS 2 Jazzy description package
+# Arm + Body: ROS 2 Jazzy, left arm hardware + ArUco tag reach
 
-Dual-arm robot (two 6-DOF arms + grippers on an aluminium-extrusion body), generated from the Fusion design **Arm + Body v15**. Runs in RViz and in Gazebo Harmonic with ros2_control on **Ubuntu 24.04 / ROS 2 Jazzy**.
+Fork of [Aqid2108/arm-body-ros2](https://github.com/Aqid2108/arm-body-ros2): a dual-arm robot (two 6-DOF arms + grippers on an aluminium-extrusion body) running in RViz, Gazebo Harmonic and MoveIt 2 on **Ubuntu 24.04 / ROS 2 Jazzy**.
+
+This fork adds:
+- **Real left arm (arm A)**: MoveIt drives the physical Feetech servos via `arm_body_hardware`
+- **ArUco tag reach**: arm A's gripper camera finds an ArUco tag and moves the jaw tip to it, in simulation or with a real camera
 
 ![Arm A kinematic chain](docs/arm_chain.png)
 
@@ -14,9 +18,9 @@ with `arm_motion_player/run.sh`, menu **M**.
 
 ## Quick start
 ```bash
-mkdir -p ~/arm_body_ws/src && cd ~/arm_body_ws/src
-git clone https://github.com/Aqid2108/arm-body-ros2.git
-cd ~/arm_body_ws
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone -b feat/arm-motion-demos https://github.com/Maheshk1214/arm-body-ros2.git
+cd ~/ros2_ws
 rosdep install --from-paths src -y --ignore-src
 colcon build --symlink-install
 source install/setup.bash
@@ -27,17 +31,41 @@ ros2 launch arm_body_description gazebo.launch.py    # Gazebo + ros2_control
 
 Full setup, commands and joint reference: **[docs/RUN_GUIDE.md](docs/RUN_GUIDE.md)**.
 
+## Real left arm (arm A)
+Arm A's servos (joints 1–5, Feetech bus at 1 Mbaud) are driven by `feetech_bridge`, which serves MoveIt's `FollowJointTrajectory` actions and publishes `/joint_states`. Joints without a servo yet (wrist roll, gripper, all of arm B) are simulated so MoveIt always sees a complete robot. Servo ids, signs and the serial port are in [`arm_body_hardware/config/arm_a.yaml`](arm_body_hardware/config/arm_a.yaml).
+
+```bash
+ros2 run arm_body_hardware calibrate                             # once: record the zero pose (arm hanging straight down)
+ros2 launch arm_body_hardware real_arm.launch.py monitor:=true   # torque off: move by hand, check RViz follows correctly
+ros2 launch arm_body_hardware real_arm.launch.py                 # MoveIt drives the real arm
+```
+Don't run it alongside the mock demo or Gazebo, because they use the same topic and controller names.
+
+## ArUco tag reach
+`aruco_reach` detects an ArUco tag (DICT_4X4_50, id 0, 50 mm) with the camera on arm A's gripper, estimates its pose and moves the jaw tip in front of it with MoveIt (collision-checked).
+
+```bash
+ros2 launch arm_motion_demos aruco_reach_sim.launch.py           # simulated camera + tag in Gazebo
+ros2 launch arm_motion_demos aruco_reach_sim.launch.py camera:=stream stream_url:=http://<esp32-ip>:81/stream   # real camera
+ros2 run arm_motion_demos aruco_reach                            # second terminal
+ros2 run arm_motion_demos aruco_reach --ros-args -p dry_run:=true   # detect + plan only
+ros2 launch arm_motion_demos aruco_tf_view.launch.py             # just watch the tag TF in RViz
+```
+Parameters and details: **[arm_motion_demos/README.md](arm_motion_demos/README.md#aruco-reach-arm-as-gripper-camera)**.
+
 ## Contents
 | Path | What |
 |---|---|
-| `arm_body_description/` | ROS 2 package: URDF/xacro, meshes, controllers, launch files |
-| `docs/RUN_GUIDE.md` | Install, build, RViz, Gazebo, joint/controller reference, troubleshooting |
+| `arm_body_description/` | URDF/xacro, meshes, controllers, launch files; gripper camera mount (`arm_a_camera.xacro`) |
+| `arm_body_hardware/` | **New:** Feetech servo bridge, calibration and launch for the real arm A |
 | `arm_body_moveit_config/` | MoveIt 2 configuration: mock demo and MoveIt on Gazebo ([README](arm_body_moveit_config/README.md)) |
-| `arm_motion_demos/` | Gesture demos (wave, dual-arm, 67 dance) as YAML motion files, sequences, tests, video recording ([README](arm_motion_demos/README.md)) |
+| `arm_motion_demos/` | Gesture demos (wave, dual-arm, 67 dance) as YAML motion files, sequences, tests, video recording, plus **new** ArUco reach, tag TF viewer and camera streaming ([README](arm_motion_demos/README.md)) |
 | `arm_motion_player/` | One-command menu (`./run.sh`): starts Gazebo + MoveIt, single-joint demos, live keyboard control, the motion library ([README](arm_motion_player/README.md)) |
+| `docs/RUN_GUIDE.md` | Install, build, RViz, Gazebo, joint/controller reference, troubleshooting |
 
 ## Key facts
 - 30 links, 14 controllable joints (6 per arm + 1 gripper per arm), 6.82 kg total
 - Shoulder servos: Feetech STS3250 (12 V); all others STS3215 (12 V)
 - Arm B mirrors arm A: send the same joint values for mirror-image motion
 - Self-collision is optional: `gazebo.launch.py self_collide:=true`
+- Real hardware status: arm A joints 1–5 connected; wrist roll, gripper and arm B still simulated
