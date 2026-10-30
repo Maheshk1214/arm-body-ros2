@@ -1,0 +1,96 @@
+# Macarena: one arm at a time (right = arm B first, then left = arm A) moves to the next pose:
+# forward palm down, palm up, opposite shoulder, behind the head, opposite hip, own hip, then a
+# sway in place of the hip wiggle. The arms layer like a person's: arm B's hand stays close to the
+# body and arm A crosses in front of it, coming over the top. Poses were solved from hand targets with the URDF
+# kinematics and checked collision-free in MoveIt, with each arm in the other's current pose.
+name: macarena
+title: Macarena
+description: Arms out, palms up, hands to the shoulders, behind the head, to the hips, then a sway.
+
+parameters:
+  repetitions: {type: int, default: 2, min: 1, max: 20, help: number of times through the dance}
+  tempo: {type: float, default: 40.0, min: 10.0, max: 120.0, unit: bpm,
+          help: beats per minute of the sway (the arm moves go as fast as the limits allow)}
+
+poses:
+  forward_b:   # right: arm forward, palm down
+    arm_a: [0.00, -0.01, 0.00, 0.00, 0.01, 0.01]
+    arm_b: [0.00, -1.57, 0.00, 0.00, 1.57, 0.01]
+  forward_a:   # left: arm forward, palm down
+    arm_a: [0.00, -1.57, 0.00, 0.00, 1.57, 0.01]
+    arm_b: [0.00, -1.57, 0.00, 0.00, 1.57, 0.01]
+  palm_up_b:   # right: palm up
+    arm_a: [0.00, -1.57, 0.00, 0.00, 1.57, 0.01]
+    arm_b: [0.00, -1.57, 0.00, 0.00, 1.57, 3.10]
+  palm_up_a:   # left: palm up
+    arm_a: [0.00, -1.57, 0.00, 0.00, 1.57, 3.10]
+    arm_b: [0.00, -1.57, 0.00, 0.00, 1.57, 3.10]
+  shoulder_b:   # right: hand to the opposite shoulder
+    arm_a: [0.00, -1.57, 0.00, 0.00, 1.57, 3.10]
+    arm_b: [-0.70, -0.03, -0.57, -1.54, 0.33, 0.01]
+  shoulder_a_via:   # left: over the top, clear of the right hand
+    arm_a: [-1.45, -2.90, -0.68, -1.54, 1.45, 1.55]
+    arm_b: [-0.70, -0.03, -0.57, -1.54, 0.33, 0.01]
+  shoulder_a:   # left: hand to the opposite shoulder
+    arm_a: [-0.67, -0.64, -0.41, -1.54, 1.03, 0.01]
+    arm_b: [-0.70, -0.03, -0.57, -1.54, 0.33, 0.01]
+  head_b_via:   # right: drop forward out from under the left arm
+    arm_a: [-0.67, -0.64, -0.41, -1.54, 1.03, 0.01]
+    arm_b: [0.11, -0.56, -0.05, -0.14, 2.39, 0.03]
+  head_b:   # right: hand behind the head
+    arm_a: [-0.67, -0.64, -0.41, -1.54, 1.03, 0.01]
+    arm_b: [0.20, -2.80, -0.40, -1.30, 1.57, 0.01]
+  head_a:   # left: hand behind the head
+    arm_a: [0.20, -2.80, -0.40, -1.30, 1.57, 0.01]
+    arm_b: [0.20, -2.80, -0.40, -1.30, 1.57, 0.01]
+  opp_hip_b:   # right: hand to the opposite hip
+    arm_a: [0.20, -2.80, -0.40, -1.30, 1.57, 0.01]
+    arm_b: [-0.68, -0.03, 0.25, -1.54, 0.93, 0.01]
+  opp_hip_a:   # left: hand to the opposite hip
+    arm_a: [-0.67, -0.25, -0.12, -1.43, 1.35, 0.01]
+    arm_b: [-0.68, -0.03, 0.25, -1.54, 0.93, 0.01]
+  own_hip_b:   # right: hand on its own hip
+    arm_a: [-0.67, -0.25, -0.12, -1.43, 1.35, 0.01]
+    arm_b: [1.13, -1.09, 0.58, 1.54, 2.08, 0.01]
+  own_hip_a:   # left: hand on its own hip
+    arm_a: [0.83, -1.16, 0.57, 1.54, 2.12, 0.01]
+    arm_b: [1.13, -1.09, 0.58, 1.54, 2.08, 0.01]
+
+steps:
+  - repeat: repetitions
+    steps:
+      - move: forward_b
+        label: "{i}/{repetitions} right: arm forward, palm down"
+      - move: forward_a
+        label: "{i}/{repetitions} left: arm forward, palm down"
+      - move: palm_up_b
+        label: "{i}/{repetitions} right: palm up"
+      - move: palm_up_a
+        label: "{i}/{repetitions} left: palm up"
+      - move: shoulder_b
+        label: "{i}/{repetitions} right: hand to the opposite shoulder"
+      - move: shoulder_a_via
+        label: "{i}/{repetitions} left: hand to the opposite shoulder"
+      - move: shoulder_a
+      - move: head_b_via
+        label: "{i}/{repetitions} right: hand behind the head"
+      - move: head_b
+      - move: head_a
+        label: "{i}/{repetitions} left: hand behind the head"
+      - move: opp_hip_b
+        label: "{i}/{repetitions} right: hand to the opposite hip"
+      - move: opp_hip_a
+        label: "{i}/{repetitions} left: hand to the opposite hip"
+      - move: own_hip_b
+        label: "{i}/{repetitions} right: hand on its own hip"
+      - move: own_hip_a
+        label: "{i}/{repetitions} left: hand on its own hip"
+      - oscillate:
+          # hands on hips, elbows sway in and out (no hips to wiggle)
+          amplitude: {arm_a_joint1: 0.25, arm_b_joint1: 0.25}
+          phase: {arm_b_joint1: pi}
+          period: 2 * 60 / tempo
+          cycles: 2
+        label: "{i}/{repetitions} sway"
+  - move: home
+    label: back to home
