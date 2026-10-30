@@ -178,21 +178,25 @@ class RobotExecutor:
             self.pubs[c].publish(msg)
 
     def execute(self, name, motion, guard_limits=True, tolerance=0.2,
-                should_stop=None, on_sample=None):
+                should_stop=None, on_sample=None, goal_tolerance=GOAL_TOLERANCE,
+                limit_guard=LIMIT_GUARD):
         """
         Run one motion and return the largest deviation from the plan (rad).
 
         should_stop() is polled while moving; a non-empty return value stops
         the motion (Stopped). on_sample(t, measured, planned) is called for
-        every /joint_states message after the start. Raises Aborted (after
-        holding) if anything goes wrong.
+        every /joint_states message after the start. The motion is done when
+        /joint_states is within goal_tolerance (rad) of its final pose; real
+        servos stop a little short under load. With guard_limits, a joint
+        within limit_guard (rad) of a URDF limit stops the motion. Raises
+        Aborted (after holding) if anything goes wrong.
         """
         start = self.state[0] + START_DELAY
         self.publish(motion, start)
         self.log.info(f'[{name}] start ({motion.duration:.1f} s)')
         phases = list(motion.phases)
-        lower = self.limits.lower + LIMIT_GUARD
-        upper = self.limits.upper - LIMIT_GUARD
+        lower = self.limits.lower + limit_guard
+        upper = self.limits.upper - limit_guard
         last_stamp, last_wall, worst = None, time.monotonic(), 0.0
         settle_end = None
         while True:
@@ -226,10 +230,10 @@ class RobotExecutor:
             if guard_limits and ((q < lower) | (q > upper)).any():
                 j = m.JOINTS[int(np.argmax((lower - q).clip(0) + (q - upper).clip(0)))]
                 self.hold(f'{j} at {q[m.INDEX[j]]:+.4f} is too close to its limit')
-                raise Aborted(f'{name}: {j} came within {LIMIT_GUARD} rad of its limit')
+                raise Aborted(f'{name}: {j} came within {limit_guard} rad of its limit')
             if t >= motion.duration:
                 final = np.abs(q - motion.q[-1]).max()
-                if final < GOAL_TOLERANCE:
+                if final < goal_tolerance:
                     break
                 settle_end = settle_end or t + 3.0
                 if t > settle_end:

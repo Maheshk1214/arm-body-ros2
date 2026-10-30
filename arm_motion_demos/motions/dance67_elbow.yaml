@@ -1,0 +1,39 @@
+name: dance67_elbow
+title: 67 dance (elbow)
+description: The 67 dance bent at the elbow (joint4) instead of joint3, so the upper arm stays
+  straight and the forearm points forward, hands bobbing up and down in turn to a beat.
+
+parameters:
+  repetitions: {type: int, default: 6, min: 1, max: 50, help: number of 6-7 cycles}
+  tempo: {type: float, default: 54.0, min: 10.0, max: 200.0, unit: bpm,
+          help: beats per minute (two beats per cycle)}
+  # above 0.3 rad the forearm (joint4) reaches its safe lower limit at any tempo
+  amplitude: {type: float, default: 0.25, min: 0.05, max: 0.3, unit: rad,
+              help: forearm tilt}
+
+poses:
+  ready:
+    both_arms: [0.0, -0.35, 0.0, -1.22, 1.57, 0.01]   # upper arm straight, forearm forward
+    grippers: [0.6, 0.6]                              # palms open
+
+steps:
+  - move: ready
+    label: "dance: ready, palms up"
+  - oscillate:
+      # "up" = forearm tilts up (joint2/joint4 more negative), wrist compensates
+      amplitude:
+        arm_a_joint2: -0.4 * amplitude
+        arm_a_joint4: -amplitude
+        arm_a_joint5: 1.2 * amplitude
+        arm_b_joint2: -0.4 * amplitude
+        arm_b_joint4: -amplitude
+        arm_b_joint5: 1.2 * amplitude
+      phase: {arm_b: pi}                    # the right hand moves opposite the left
+      period: 2 * 60 / tempo
+      cycles: repetitions
+      # keep the beat within 85 % of the acceleration limits (the ramps add ~12 %)
+      max_acceleration: 0.85
+      too_fast: lower the tempo or the amplitude
+    label: "dance: 6-7 x{repetitions} at {tempo:.0f} bpm"
+  - move: home
+    label: back to home

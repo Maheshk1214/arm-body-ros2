@@ -21,8 +21,8 @@ import sys
 
 from arm_motion_demos import motion_library as ml
 from arm_motion_demos import motions as m
-from arm_motion_demos.executor import (Aborted, HOME_TOLERANCE, load_robot,
-                                       RobotExecutor)
+from arm_motion_demos.executor import (Aborted, GOAL_TOLERANCE, HOME_TOLERANCE,
+                                       LIMIT_GUARD, load_robot, RobotExecutor)
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -41,6 +41,8 @@ class MotionDemo(Node):
         self.declare_parameter('collision_check', True)
         self.declare_parameter('dry_run', False)
         self.declare_parameter('tracking_tolerance', 0.2)  # rad, plan vs /joint_states
+        self.declare_parameter('goal_tolerance', GOAL_TOLERANCE)  # rad, final pose reached
+        self.declare_parameter('limit_guard', LIMIT_GUARD)  # rad, stop this close to a limit
         self.declare_parameter('motion_folders', [''])     # extra folders of *.yaml motions
         self.robot = None  # RobotExecutor, created once the limits are loaded
 
@@ -55,7 +57,9 @@ class MotionDemo(Node):
         # the original parameter names, mapped onto the motions' own parameters
         values = {'wave': {'arm': self.param('wave_arm')},
                   'dance67': {'tempo': self.param('dance_tempo'),
-                              'amplitude': self.param('dance_amplitude')}}
+                              'amplitude': self.param('dance_amplitude')},
+                  'dance67_elbow': {'tempo': self.param('dance_tempo'),
+                                    'amplitude': self.param('dance_amplitude')}}
         common = {'repetitions': self.param('repetitions')} if self.param('repetitions') else {}
         names = list(self.param('sequence'))
         folders = [ml.builtin_folder()] + [Path(f) for f in self.param('motion_folders') if f]
@@ -114,7 +118,9 @@ class MotionDemo(Node):
             sequence.insert(0, ('home', homing))
         for name, motion in sequence:
             self.robot.execute(name, motion, guard_limits=name != 'home',
-                               tolerance=self.param('tracking_tolerance'))
+                               tolerance=self.param('tracking_tolerance'),
+                               goal_tolerance=self.param('goal_tolerance'),
+                               limit_guard=self.param('limit_guard'))
         self.get_logger().info('Sequence finished at home')
         return 0
 

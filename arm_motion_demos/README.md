@@ -7,6 +7,7 @@ Gesture demonstrations for the dual-arm robot, in simulation (MoveIt mock demo o
 | `wave` | One arm swings out to the side, forearm up, gripper open; the hand sways ~20 cm side to side |
 | `dual_arm` | Both arms forward → raised together → alternating up/down → out to the sides → symmetric flaps |
 | `dance67` | "6-7": forearms forward, palms (grippers) open, hands bobbing up and down in turn; the wrists counter-rotate so the palms stay level |
+| `dance67_elbow` | The same 6-7, bent at the elbow (joint4) instead of joint3: upper arm straight, forearm forward |
 
 | Wave | Dual-arm routine (1.5x) | 67 dance |
 |:---:|:---:|:---:|

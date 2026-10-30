@@ -66,7 +66,7 @@ def test_yaml_builds_exactly_the_old_python_gesture(library, home, limits, name,
 def test_installed_and_source_motions_are_the_same_files():
     installed = ml.builtin_folder()
     names = sorted(p.name for p in SOURCE.glob('*.yaml'))
-    assert names == ['dance67.yaml', 'dual_arm.yaml', 'wave.yaml']
+    assert names == ['dance67.yaml', 'dance67_elbow.yaml', 'dual_arm.yaml', 'wave.yaml']
     if installed != SOURCE and installed.is_dir():
         for n in names:
             assert (installed / n).read_text() == (SOURCE / n).read_text(), \
@@ -138,7 +138,7 @@ def test_library_discovers_files_and_skips_broken_ones(tmp_path, home, limits):
     write(tmp_path, 'name: [', 'broken.yaml')
     write(tmp_path, GOOD.replace('name: nod', 'name: wave'), 'copy.yaml')
     lib, problems = ml.load_library([SOURCE, tmp_path, tmp_path / 'missing'], home, limits)
-    assert sorted(lib) == ['dance67', 'dual_arm', 'nod', 'wave']
+    assert sorted(lib) == ['dance67', 'dance67_elbow', 'dual_arm', 'nod', 'wave']
     assert lib['wave'].path.parent == SOURCE  # the first folder wins
     assert len(problems) == 2
     assert any('broken.yaml: not valid YAML' in p for p in problems)
