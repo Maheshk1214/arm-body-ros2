@@ -9,7 +9,7 @@ ACCELERATION = 41
 GOAL_POSITION = 42      # 2 bytes, followed by goal time (2) and goal speed (2)
 PRESENT_POSITION = 56   # 2 bytes
 
-PING, READ, WRITE, SYNC_WRITE = 0x01, 0x02, 0x03, 0x83
+PING, READ, WRITE, SYNC_READ, SYNC_WRITE = 0x01, 0x02, 0x03, 0x82, 0x83
 BROADCAST = 0xFE
 TICKS_PER_REV = 4096
 
@@ -57,6 +57,26 @@ class FeetechBus:
             return None
         raw = frame[5] | (frame[6] << 8)
         return -(raw & 0x7FFF) if raw & 0x8000 else raw
+
+    def sync_read_positions(self, ids):
+        """{id: raw position} in one bus round trip; servos that did not answer are left out."""
+        with self._lock:
+            self._ser.reset_input_buffer()
+            self._ser.write(_packet(BROADCAST, SYNC_READ, bytes([PRESENT_POSITION, 2, *ids])))
+            self._ser.flush()
+            resp = self._ser.read(8 * len(ids))
+        positions = {}
+        i = resp.find(b'\xff\xff')
+        while i != -1:
+            frame = resp[i:i + 8]
+            valid = len(frame) == 8 and frame[2] in ids and frame[3] == 4
+            if valid and (~sum(frame[2:-1])) & 0xFF == frame[-1]:
+                raw = frame[5] | (frame[6] << 8)
+                positions[frame[2]] = -(raw & 0x7FFF) if raw & 0x8000 else raw
+                i = resp.find(b'\xff\xff', i + 8)
+            else:
+                i = resp.find(b'\xff\xff', i + 1)
+        return positions
 
     def write_byte(self, sid, addr, value):
         return self._transact(sid, WRITE, bytes([addr, value & 0xFF])) is not None

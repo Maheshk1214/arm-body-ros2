@@ -1,10 +1,11 @@
-"""MoveIt + RViz driving the real arm A over the Feetech bus.
+"""MoveIt + RViz driving the real arms A and B, one Feetech bus each.
 
-    ros2 launch arm_body_hardware real_arm.launch.py monitor:=true   # torque off, RViz mirrors the arm
-    ros2 launch arm_body_hardware real_arm.launch.py                 # MoveIt drives the arm
+    ros2 launch arm_body_hardware real_arm.launch.py monitor:=true  # torque off, RViz mirrors
+    ros2 launch arm_body_hardware real_arm.launch.py                # MoveIt drives the arms
+    ros2 launch arm_body_hardware real_arm.launch.py arms:=arm_a    # only arm A real
 
-Run `ros2 run arm_body_hardware calibrate` once first. Do not run alongside the mock demo or
-Gazebo: they publish /joint_states and controllers with the same names.
+Run `ros2 run arm_body_hardware calibrate --arm <arm>` once per arm first. Do not run alongside
+the mock demo or Gazebo: they publish /joint_states and controllers with the same names.
 """
 import os
 
@@ -32,7 +33,8 @@ def generate_launch_description():
     bridge = Node(
         package='arm_body_hardware', executable='feetech_bridge', output='screen',
         parameters=[{'config': LaunchConfiguration('config'),
-                     'monitor': LaunchConfiguration('monitor')}])
+                     'monitor': LaunchConfiguration('monitor'),
+                     'arms': ParameterValue(LaunchConfiguration('arms'), value_type=str)}])
 
     rsp = Node(
         package='robot_state_publisher', executable='robot_state_publisher', output='log',
@@ -80,7 +82,9 @@ def generate_launch_description():
                               description='Torque off; RViz only mirrors the arm moved by hand'),
         DeclareLaunchArgument('rviz', default_value='true', description='Start RViz'),
         DeclareLaunchArgument('config', default_value='',
-                              description='Arm config yaml (default: config/arm_a.yaml)'),
+                              description='Arms config yaml (default: config/arms.yaml)'),
+        DeclareLaunchArgument('arms', default_value='',
+                              description='Real arms, comma-separated (default: all)'),
         DeclareLaunchArgument('camera', default_value='true',
                               description='Start the gripper camera (camera_stream)'),
         DeclareLaunchArgument('camera_device', default_value='0',
