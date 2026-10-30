@@ -4,6 +4,9 @@
 # commanded trajectories instantly, so MoveIt always sees a complete robot state.
 baud: 1000000
 rate: 50.0                 # Hz, read + command loop
+# s: servos follow their commands ~0.1 s late (bus, loop and servo response), so each servo is
+# sent where the trajectory will be this much later. A servo's `lead` overrides it.
+command_lead: 0.12
 
 arms:
   arm_a:
@@ -14,7 +17,7 @@ arms:
       arm_a_joint2: {id: 2, sign: 1}
       arm_a_joint3: {id: 3, sign: 1}
       arm_a_joint4: {id: 4, sign: 1}
-      arm_a_joint5: {id: 5, sign: 1}
+      arm_a_joint5: {id: 5, sign: 1, lead: 0.15}
       arm_a_joint6: {id: 6, sign: 1}
       # No gripper servo fitted yet. When there is one, add it here and calibrate it:
       # arm_a_gripper_joint: {id: 7, sign: 1}

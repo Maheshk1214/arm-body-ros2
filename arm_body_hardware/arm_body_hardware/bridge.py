@@ -40,13 +40,12 @@ class Trajectory:
         self.times = times          # (n,) seconds from start
         self.positions = positions  # (n, len(joints))
         self.start = time.monotonic() if start is None else start
-        self.finished = False       # sampling reached the last point
+        self.finished = False       # the trajectory's time has run out
         self.failed = None          # error string if the bridge stopped it
 
     def sample(self, now):
         t = now - self.start
         if t >= self.times[-1]:
-            self.finished = True
             return self.positions[-1]
         return np.array([np.interp(t, self.times, self.positions[:, k])
                          for k in range(len(self.joints))])
@@ -85,6 +84,8 @@ class FeetechBridge(Node):
             raise RuntimeError(f'{uncalibrated} not calibrated. Run '
                                f'`ros2 run arm_body_hardware calibrate --arm {arm}`, or leave '
                                f'the arm out with arms:=...')
+        self.leads = {j: float(s.get('lead', cfg.get('command_lead', 0.0)))
+                      for j, s in self.servos.items()}
         # A full-turn joint (wrist roll) is kept to the part of its range the servo reaches
         self.limits = config.urdf_limits()
         for joint, s in self.servos.items():
@@ -182,11 +183,16 @@ class FeetechBridge(Node):
                     traj.failed = f'lost contact with {lost}'
                 if traj.failed:
                     continue
-                for joint, value in zip(traj.joints, traj.sample(now)):
+                samples = {}  # lead -> positions of every joint of traj
+                for k, joint in enumerate(traj.joints):
+                    lead = self.leads.get(joint, 0.0)
+                    if lead not in samples:
+                        samples[lead] = traj.sample(now + lead)
                     if joint in self.servos:
-                        targets[joint] = value
+                        targets[joint] = samples[lead][k]
                     else:
-                        self.pos[joint] = float(value)
+                        self.pos[joint] = float(samples[lead][k])
+                traj.finished = now - traj.start >= traj.times[-1]
             if lost and self.active:
                 self.get_logger().error(f'Lost contact with {lost}; stopping trajectories.')
             self._write(targets)
